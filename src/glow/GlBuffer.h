@@ -158,10 +158,10 @@ class GlBuffer : public GlObject {
   // FIXME: have common naming for getting the data.
 
   /** \brief get data from the buffer. **/
-  void get(std::vector<T>& data);
+  void get(std::vector<T>& data) const;
 
   /** \brief get data in range [start, start + size] from the buffer. **/
-  void get(std::vector<T>& data, uint32_t start, uint32_t size);
+  void get(std::vector<T>& data, uint32_t start, uint32_t size) const;
 
   /** \brief reserve num_elements of T in memory. **/
   void reserve(uint32_t num_elements);
@@ -204,9 +204,9 @@ class GlBuffer : public GlObject {
 
  protected:
   /** \brief bind vertex array object only if needed and return overwritten vertex array object. **/
-  GLuint bindTransparently();
+  GLuint bindTransparently() const;
   /** \brief release vertex array object and restore state before calling bindTranparently. **/
-  void releaseTransparently(GLuint old_buffer);
+  void releaseTransparently(GLuint old_buffer) const;
 
   static GLuint boundBufferObject_;
 
@@ -308,12 +308,12 @@ void GlBuffer<T>::insert(uint32_t offset, const T& value) {
 }
 
 template <class T>
-void GlBuffer<T>::get(std::vector<T>& data) {
+void GlBuffer<T>::get(std::vector<T>& data) const {
   get(data, 0, size_);
 }
 
 template <class T>
-void GlBuffer<T>::get(std::vector<T>& data, uint32_t start, uint32_t size) {
+void GlBuffer<T>::get(std::vector<T>& data, uint32_t start, uint32_t size) const {
   size = std::min(size, size_ - start);  // ensure valid output size
 
   data.clear();
@@ -382,7 +382,7 @@ void GlBuffer<T>::resize(uint32_t new_size) {
 }
 
 template <class T>
-GLuint GlBuffer<T>::bindTransparently() {
+GLuint GlBuffer<T>::bindTransparently() const {
   if (boundBufferObject_ == id_) return id_;
 
   // FIXME: boundBufferObject currently does not distinguish between different buffer targets:
@@ -395,7 +395,7 @@ GLuint GlBuffer<T>::bindTransparently() {
 }
 
 template <class T>
-void GlBuffer<T>::releaseTransparently(GLuint old_buffer) {
+void GlBuffer<T>::releaseTransparently(GLuint old_buffer) const {
   if (old_buffer == id_) return;  // nothing changed.
 
   glBindBuffer(target_, old_buffer);
