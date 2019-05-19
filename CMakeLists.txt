@@ -80,6 +80,10 @@ endif()
 
 target_link_libraries(glow ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${Boost_LIBRARIES})
 
+
+# sample
+add_subdirectory(samples)
+
 if(NOT GTEST_FOUND)
 
   IF(IS_DIRECTORY "/usr/src/gtest/")
