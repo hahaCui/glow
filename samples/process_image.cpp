@@ -18,7 +18,35 @@
 #include <glow/GlState.h>
 #include <glow/util/X11OffscreenContext.h>
 
+#include "timer.h"
 using namespace glow;
+
+void imageConvolution(const cv::Mat& input_rgb_image, cv::Mat& output_rgb_image, int unRadius) {
+    //Convolution
+    float fSum = 0.0f;
+    int unTotal = 0;
+    auto unHeight = input_rgb_image.rows;
+    auto unWidth = input_rgb_image.cols;
+    auto unChannel = input_rgb_image.channels();
+
+    output_rgb_image = cv::Mat(unWidth, unHeight, CV_8UC3);
+    for(int i=0; i<unHeight; i++)
+        for(int j=0; j<unWidth; j++)
+            for(int k=0; k<unChannel; k++){
+                for(int ii=i-unRadius; ii<=i+unRadius; ii++)
+                    for(int jj=j-unRadius; jj<=j+unRadius; jj++){
+                        if(ii>=0 && jj>=0 && ii<unHeight && jj<unWidth){
+                            fSum += input_rgb_image.at<cv::Vec3b>(ii,jj)[k];
+                            unTotal++;
+                        }
+                    }
+                output_rgb_image.at<cv::Vec3b>(i,j)[k] = fSum / (float)unTotal;
+                unTotal = 0;
+                fSum = 0.0f;
+            }
+    return;
+
+}
 int main(int argc, char** argv) {
     // init window
     glow::X11OffscreenContext ctx(3,3);  // OpenGl context
@@ -42,6 +70,15 @@ int main(int argc, char** argv) {
             values[3 * (i * width +j) + 2] = (float)b;
         }
 
+    cv::Mat cpu_smoothed_image;
+    Timer cpu_timer;
+    cpu_timer.start();
+    imageConvolution(image, cpu_smoothed_image, 5);
+    cpu_timer.stop();
+    std::cout << "cpu Convolution: " << cpu_timer.elapsedMilliseconds() << "ms"<< std::endl;
+
+
+
     GlFramebuffer fbo(width, height);
 
     _CheckGlError(__FILE__, __LINE__);
@@ -64,6 +101,9 @@ int main(int argc, char** argv) {
     program.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/test_image.frag"));
     program.link();
 
+    program.setUniform(GlUniform<float>("fRadius", 150));
+    program.setUniform(GlUniform<float>("nWidth", image.rows));
+    program.setUniform(GlUniform<float>("nHeight", image.cols));
 
     GlSampler sampler;
     sampler.setMagnifyingOperation(TexMagOp::NEAREST);
@@ -107,7 +147,8 @@ int main(int argc, char** argv) {
 
     cv::imshow("image", image);
     cv::imshow("out_image", out_image);
-    cv::waitKey(3000);
+    cv::imshow("cpu_smooth_image", cpu_smoothed_image);
+    cv::waitKey(10000);
 
     return 0;
 }
