@@ -13,3 +13,6 @@ target_link_libraries(process_image ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${Open
 
 add_executable(transfrom_feedback transfrom_feedback.cpp)
 target_link_libraries(transfrom_feedback ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
+
+add_executable(buffer buffer.cpp)
+target_link_libraries(buffer ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
