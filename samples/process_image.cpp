@@ -29,7 +29,7 @@ void imageConvolution(const cv::Mat& input_rgb_image, cv::Mat& output_rgb_image,
     auto unWidth = input_rgb_image.cols;
     auto unChannel = input_rgb_image.channels();
 
-    output_rgb_image = cv::Mat(unWidth, unHeight, CV_8UC3);
+    output_rgb_image = cv::Mat(unHeight,  unWidth, CV_8UC3);
     for(int i=0; i<unHeight; i++)
         for(int j=0; j<unWidth; j++)
             for(int k=0; k<unChannel; k++){
@@ -52,9 +52,10 @@ int main(int argc, char** argv) {
     glow::X11OffscreenContext ctx(3,3);  // OpenGl context
     glow::inititializeGLEW();
 
+    float convolution_radius = 5;
     _CheckGlError(__FILE__, __LINE__);
     //  std::cout << "On entry: " << GlState::queryAll() << std::endl;
-    std::string image_file = "/home/pang/Documents/lenna.png";
+    std::string image_file = "/home/pang/Documents/IMG_2357.jpg";
     cv::Mat image = cv::imread(image_file, CV_LOAD_IMAGE_COLOR);
     uint32_t width = image.cols, height = image.rows;
 
@@ -71,14 +72,14 @@ int main(int argc, char** argv) {
         }
 
     cv::Mat cpu_smoothed_image;
-    Timer cpu_timer;
+    Timer cpu_timer, gpu_timer;
     cpu_timer.start();
-    imageConvolution(image, cpu_smoothed_image, 5);
+    imageConvolution(image, cpu_smoothed_image, convolution_radius);
     cpu_timer.stop();
     std::cout << "cpu Convolution: " << cpu_timer.elapsedMilliseconds() << "ms"<< std::endl;
 
 
-
+    gpu_timer.start();
     GlFramebuffer fbo(width, height);
 
     _CheckGlError(__FILE__, __LINE__);
@@ -98,10 +99,10 @@ int main(int argc, char** argv) {
     GlProgram program;
     program.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/empty.vert"));
     program.attach(GlShader::fromFile(ShaderType::GEOMETRY_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/quad.geom"));
-    program.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/test_image.frag"));
+    program.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/convolution.frag"));
     program.link();
 
-    program.setUniform(GlUniform<float>("fRadius", 150));
+    program.setUniform(GlUniform<float>("fRadius", convolution_radius));
     program.setUniform(GlUniform<float>("nWidth", image.rows));
     program.setUniform(GlUniform<float>("nHeight", image.cols));
 
@@ -133,10 +134,13 @@ int main(int argc, char** argv) {
 
     glEnable(GL_DEPTH_TEST);
 
+    gpu_timer.stop();
+    std::cout << "gpu Convolution : " << gpu_timer.elapsedMilliseconds() << "ms" << std::endl;
+
     std::vector<vec4> data;
     output.download(data);
 
-    cv::Mat out_image(width, height, CV_8UC3);
+    cv::Mat out_image(height,width, CV_8UC3);
     for (int i = 0; i < width* height; i++) {
         int x = i % width;
         int y = i / width;

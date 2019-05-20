@@ -10,29 +10,30 @@ uniform float nHeight;
 
 out vec3 color;
 
+
 void main()
 {
   vec2 coords = vec2(texCoords.x, texCoords.y);
+  float normalized_pixel_x = 1.0 / nWidth;
+  float normalized_pixel_y = 1.0 / nHeight;
+  float normalized_radius_x = fRadius / nWidth;
+  float normalized_radius_y = fRadius / nHeight;
 
 
-  vec3 fSum = vec3(0.0, 0.0, 0.0);		//Sum of the neighborhood.
+  vec3 fSum = vec3(225.0, 0.0, 0.0);		//Sum of the neighborhood.
   vec3 fTotal = vec3(0.0, 0.0, 0.0);		//NoPoints in the neighborhood.
   vec3 vec3Result = vec3(0.0, 0.0, 0.0);	//Output vector to replace the current texture.
 
-  	//Neighborhood summation.
-  //plus 1.0 for the '0.5 effect'.
-  	for (float ii = coords.x - fRadius; ii < coords.x + fRadius + 0.5; ii += 1.0) {
-      for (float jj = coords.y - fRadius; jj <= coords.y + fRadius + 0.5; jj += 1.0) {
-        if (ii >= 0.0 && jj >= 0.0 && ii < nWidth && jj < nHeight) {
-          fSum += texture(tex_input, vec2(ii, jj)).rgb;
-          fTotal += vec3(1.0, 1.0, 1.0);
-        }
+  //Neighborhood summation.
+  for (float ii = coords.x - normalized_radius_x; ii < coords.x + normalized_radius_x ; ii += normalized_pixel_x) {
+    for (float jj = coords.y - normalized_radius_y; jj <= coords.y + normalized_radius_y; jj += normalized_pixel_y) {
+      if (ii >= 0.0 && jj >= 0.0 && ii < 1.0 && jj < 1.0) {
+        vec2 new_pos = vec2(ii, jj);
+        fSum += texture(tex_input, new_pos).rgb;
+        fTotal += vec3(1.0, 1.0, 1.0);
       }
     }
-  	vec3Result = fSum / fTotal;
-
-  //vec2 new_coord = vec2(coords.x + fRadius, coords.y);
-  vec3 tex = texture(tex_input, coords.xy).rgb;
-
-  color = vec3(tex.xyz);
+  }
+  vec3Result = fSum / fTotal;
+  color = vec3(vec3Result);
 }
