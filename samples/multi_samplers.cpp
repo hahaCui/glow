@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
 
     glActiveTexture(GL_TEXTURE2);
     input2.bind();
-    
+
 
     program.bind();
 
