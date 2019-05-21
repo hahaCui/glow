@@ -8,7 +8,7 @@ uniform float fRadius;
 uniform float nWidth;
 uniform float nHeight;
 
-out vec3 color;
+out vec4 color;
 
 
 void main()
@@ -20,7 +20,7 @@ void main()
 	float normalized_radius_y = fRadius / nHeight;
 
 
-	vec3 fSum = vec3(225.0, 0.0, 0.0);		//Sum of the neighborhood.
+	vec3 fSum = vec3(0.0, 0.0, 0.0);		//Sum of the neighborhood.
 	vec3 fTotal = vec3(0.0, 0.0, 0.0);		//NoPoints in the neighborhood.
 	vec3 vec3Result = vec3(0.0, 0.0, 0.0);	//Output vector to replace the current texture.
 
@@ -35,5 +35,5 @@ void main()
 		}
 	}
 	vec3Result = fSum / fTotal;
-	color = vec3(vec3Result);
+	color = vec4(vec3Result, 0.0);
 }
