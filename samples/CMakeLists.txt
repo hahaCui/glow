@@ -12,3 +12,6 @@ include_directories(${OpenCV_INCLUDE_DIRS} )
 
 add_executable(process_image process_image.cpp)
 target_link_libraries(process_image ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
+
+add_executable(vao_buffer vao_buffer.cpp)
+target_link_libraries(vao_buffer ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
