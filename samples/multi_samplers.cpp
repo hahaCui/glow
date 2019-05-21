@@ -21,32 +21,7 @@
 #include "timer.h"
 using namespace glow;
 
-void imageConvolution(const cv::Mat& input_rgb_image, cv::Mat& output_rgb_image, int unRadius) {
-    //Convolution
-    float fSum = 0.0f;
-    int unTotal = 0;
-    auto unHeight = input_rgb_image.rows;
-    auto unWidth = input_rgb_image.cols;
-    auto unChannel = input_rgb_image.channels();
 
-    output_rgb_image = cv::Mat(unHeight,  unWidth, CV_8UC3);
-    for(int i=0; i<unHeight; i++)
-        for(int j=0; j<unWidth; j++)
-            for(int k=0; k<unChannel; k++){
-                for(int ii=i-unRadius; ii<=i+unRadius; ii++)
-                    for(int jj=j-unRadius; jj<=j+unRadius; jj++){
-                        if(ii>=0 && jj>=0 && ii<unHeight && jj<unWidth){
-                            fSum += input_rgb_image.at<cv::Vec3b>(ii,jj)[k];
-                            unTotal++;
-                        }
-                    }
-                output_rgb_image.at<cv::Vec3b>(i,j)[k] = fSum / (float)unTotal;
-                unTotal = 0;
-                fSum = 0.0f;
-            }
-    return;
-
-}
 int main(int argc, char** argv) {
     // init window
     glow::X11OffscreenContext ctx(3,3);  // OpenGl context
@@ -59,34 +34,33 @@ int main(int argc, char** argv) {
     cv::Mat image = cv::imread(image_file, CV_LOAD_IMAGE_COLOR);
     uint32_t width = image.cols, height = image.rows;
 
-    std::vector<float> values(3 * width * height, 0);
+    std::vector<float> values0( width * height, 0);
+    std::vector<float> values1( width * height, 0);
+    std::vector<float> values2( width * height, 0);
     for(auto i = 0 ; i < image.rows; i++)
         for(auto j = 0; j < image.cols; j++) {
             float r = image.at<cv::Vec3b>(i,j)[0];
             float g = image.at<cv::Vec3b>(i,j)[1];
             float b = image.at<cv::Vec3b>(i,j)[2];
 
-            values[3 * (i * width +j)] = (float)r;
-            values[3 * (i * width +j) + 1] = (float)g;
-            values[3 * (i * width +j) + 2] = (float)b;
+            values0[ (i * width +j)] = (float)r;
+            values1[ (i * width +j)] = (float)g;
+            values2[ (i * width +j)] = (float)b;
         }
 
-    cv::Mat cpu_smoothed_image;
-    Timer cpu_timer, gpu_timer;
-    cpu_timer.start();
-    imageConvolution(image, cpu_smoothed_image, convolution_radius);
-    cpu_timer.stop();
-    std::cout << "cpu Convolution: " << cpu_timer.elapsedMilliseconds() << "ms"<< std::endl;
 
-
-    gpu_timer.start();
     GlFramebuffer fbo(width, height);
 
     _CheckGlError(__FILE__, __LINE__);
 
-    GlTexture input{width, height, TextureFormat::RGB_FLOAT};
+    GlTexture input0{width, height, TextureFormat::R_FLOAT};
+    input0.assign(PixelFormat::R, PixelType::FLOAT, &values0[0]);
 
-    input.assign(PixelFormat::RGB, PixelType::FLOAT, &values[0]);
+    GlTexture input1{width, height, TextureFormat::R_FLOAT};
+    input1.assign(PixelFormat::R, PixelType::FLOAT, &values1[0]);
+
+    GlTexture input2{width, height, TextureFormat::R_FLOAT};
+    input2.assign(PixelFormat::R, PixelType::FLOAT, &values2[0]);
 
     GlTexture output{width, height, TextureFormat::RGB_FLOAT};
     GlRenderbuffer rbo(width, height, RenderbufferFormat::DEPTH_STENCIL);
@@ -99,12 +73,13 @@ int main(int argc, char** argv) {
     GlProgram program;
     program.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/empty.vert"));
     program.attach(GlShader::fromFile(ShaderType::GEOMETRY_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/quad.geom"));
-    program.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/convolution.frag"));
+    program.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/rgb.frag"));
     program.link();
 
-    program.setUniform(GlUniform<float>("fRadius", convolution_radius));
-    program.setUniform(GlUniform<float>("nWidth", image.rows));
-    program.setUniform(GlUniform<float>("nHeight", image.cols));
+    // set texture
+    program.setUniform(GlUniform<int32_t>("tex_R", 0));
+    program.setUniform(GlUniform<int32_t>("tex_G", 1));
+    program.setUniform(GlUniform<int32_t>("tex_B", 2));
 
     GlSampler sampler;
     sampler.setMagnifyingOperation(TexMagOp::NEAREST);
@@ -115,10 +90,20 @@ int main(int argc, char** argv) {
     fbo.bind();
     vao_no_points.bind();
     glActiveTexture(GL_TEXTURE0);
-    input.bind();
+    input0.bind();
+
+    glActiveTexture(GL_TEXTURE1);
+    input1.bind();
+
+    glActiveTexture(GL_TEXTURE2);
+    input2.bind();
+    
+
     program.bind();
 
     sampler.bind(0);
+    sampler.bind(1);
+    sampler.bind(2);
 
     glDisable(GL_DEPTH_TEST);
     glViewport(0, 0, width, height);
@@ -126,16 +111,27 @@ int main(int argc, char** argv) {
     glDrawArrays(GL_POINTS, 0, 1);
 
     program.release();
-    input.release();
+
+    sampler.release(0);
+    sampler.release(1);
+    sampler.release(2);
+
+    glActiveTexture(GL_TEXTURE0);
+    input0.release();
+
+    glActiveTexture(GL_TEXTURE1);
+    input1.release();
+
+    glActiveTexture(GL_TEXTURE2);
+    input2.release();
+
     vao_no_points.release();
     fbo.release();
 
-    sampler.release(0);
+
 
     glEnable(GL_DEPTH_TEST);
 
-    gpu_timer.stop();
-    std::cout << "gpu Convolution : " << gpu_timer.elapsedMilliseconds() << "ms" << std::endl;
 
     std::vector<vec4> data;
     output.download(data);
@@ -151,7 +147,6 @@ int main(int argc, char** argv) {
 
     cv::imshow("image", image);
     cv::imshow("out_image", out_image);
-    cv::imshow("cpu_smooth_image", cpu_smoothed_image);
     cv::waitKey(10000);
 
     return 0;

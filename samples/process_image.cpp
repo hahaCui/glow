@@ -102,6 +102,7 @@ int main(int argc, char** argv) {
     program.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/convolution.frag"));
     program.link();
 
+    program.setUniform(GlUniform<int32_t>("tex_input", 0));
     program.setUniform(GlUniform<float>("fRadius", convolution_radius));
     program.setUniform(GlUniform<float>("nWidth", image.rows));
     program.setUniform(GlUniform<float>("nHeight", image.cols));
