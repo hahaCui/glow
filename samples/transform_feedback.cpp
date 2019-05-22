@@ -21,9 +21,20 @@
 #include "timer.h"
 using namespace glow;
 
-struct GrayValue {
-    int gray;
+struct Surfel {
+public:
+    Surfel() {}
+    Surfel(float _x, float _y, float _z):
+        x(_x), y(_y), z(_z){}
+    float x, y, z;
+    float radius;
+    float nx, ny, nz;
+    float confidence;
+
+    int32_t timestamp;
+    float color, weight, count;
 };
+
 int main(int argc, char** argv) {
     // init window
     glow::X11OffscreenContext ctx(3,3);  // OpenGl context
@@ -34,112 +45,68 @@ int main(int argc, char** argv) {
     cv::Mat image = cv::imread(image_file, CV_LOAD_IMAGE_COLOR);
     uint32_t width = image.cols, height = image.rows;
 
-    GlBuffer<vec4> pixel_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
-    GlBuffer<vec4> color_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
-
-    std::vector<vec4> pixels;
-    std::vector<vec4> colors;
-
-
-
-    std::vector<float> values0( width * height, 0);
-    std::vector<float> values1( width * height, 0);
-    std::vector<float> values2( width * height, 0);
-    for(auto i = 0 ; i < image.rows; i++)
-        for(auto j = 0; j < image.cols; j++) {
-            float r = image.at<cv::Vec3b>(i,j)[0];
-            float g = image.at<cv::Vec3b>(i,j)[1];
-            float b = image.at<cv::Vec3b>(i,j)[2];
-
-            colors.push_back(vec4(r,g,b,1));
-
-            vec4 v;
-            v.x = 2.0f * (float(j + 0.5f) / float(width)) - 1.0f;
-            v.y = 2.0f * (float(i + 0.5f) / float(height)) - 1.0f;
-            v.z = 0;
-            v.w = 0;
-            pixels.push_back(v);
-        }
-
-
-    pixel_buffer.assign(pixels);
-    color_buffer.assign(colors);
-
     GlFramebuffer fbo(width, height);
 
-//    ASSERT_NO_THROW(_CheckGlError(__FILE__, __LINE__));
+    glow::GlBuffer<Surfel> surfels{glow::BufferTarget::ARRAY_BUFFER,
+                                    glow::BufferUsage::DYNAMIC_DRAW};  // feedback stores updated surfels inside surfels_.
 
-    GlTexture output{width, height, TextureFormat::RGBA_FLOAT};
-    GlRenderbuffer rbo(width, height, RenderbufferFormat::DEPTH_STENCIL);
+    glow::GlBuffer<Surfel> extractBuffer_{glow::BufferTarget::ARRAY_BUFFER, glow::BufferUsage::DYNAMIC_DRAW};
+    glow::GlProgram extractProgram_;
+    glow::GlTransformFeedback extractFeedback_;
 
-    fbo.attach(FramebufferAttachment::COLOR0, output);
-    CheckGlError();
-    fbo.attach(FramebufferAttachment::DEPTH_STENCIL, rbo);
-    CheckGlError();
+    std::vector<Surfel> surfel_vec;
+    surfel_vec.push_back(Surfel(1,0,1));
+    surfel_vec.push_back(Surfel(1,1,1));
+    surfel_vec.push_back(Surfel(1,-1,1));
+    surfels.assign(surfel_vec);
+    std::cout << "surfels: " << surfels.size() << std::endl;
 
-    glow::GlTransformFeedback rgb2gray_feedback;
-
-    std::vector<std::string> gray_varyings{
-            "gray"
+    std::vector<std::string> surfel_varyings{
+            "sfl_position_radius", "sfl_normal_confidence", "sfl_timestamp", "sfl_color_weight_count",
     };
-    glow::GlBuffer<GrayValue> gray_values{glow::BufferTarget::ARRAY_BUFFER,
-                             glow::BufferUsage::DYNAMIC_DRAW};
-    gray_values.reserve(width* height);
-    rgb2gray_feedback.attach(gray_varyings, gray_values);
+    surfels.reserve(1000);
+    extractFeedback_.attach(surfel_varyings, surfels);
 
-    GlProgram program;
-    program.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/rgb_to_gray.vert"));
-    program.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/passthrough.frag"));
-    //program.attach(rgb2gray_feedback);
-    program.link();
+    glow::GlVertexArray vao_surfels_;
+    // now we can set the vertex attributes. (the "shallow copy" of surfels now contains the correct id.
+    vao_surfels_.setVertexAttribute(0, surfels, 4, AttributeType::FLOAT, false, sizeof(Surfel),
+                                    reinterpret_cast<GLvoid*>(0));
+    vao_surfels_.setVertexAttribute(1, surfels, 4, AttributeType::FLOAT, false, sizeof(Surfel),
+                                    reinterpret_cast<GLvoid*>(4 * sizeof(GLfloat)));
+    vao_surfels_.setVertexAttribute(2, surfels, 1, AttributeType::INT, false, sizeof(Surfel),
+                                    reinterpret_cast<GLvoid*>(8 * sizeof(GLfloat)));
+    vao_surfels_.setVertexAttribute(3, surfels, 3, AttributeType::FLOAT, false, sizeof(Surfel),
+                                    reinterpret_cast<GLvoid*>(offsetof(Surfel, color)));
 
-
-
-    GlVertexArray vao;
-    // 1. set
-    vao.setVertexAttribute(0, pixel_buffer, 4, AttributeType::FLOAT, false, 4 * sizeof(float), nullptr);
-    vao.setVertexAttribute(1, color_buffer, 4, AttributeType::FLOAT, false, 4 * sizeof(float), nullptr);
-    // 2. enable
-    vao.enableVertexAttribute(0);
-    vao.enableVertexAttribute(1);
-
-    glDisable(GL_DEPTH_TEST);
-
-    fbo.bind();
-    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-    glViewport(0, 0, width, height);
-//    rgb2gray_feedback.bind();
-    program.bind();
-    vao.bind();
-
-//    rgb2gray_feedback.begin(TransformFeedbackMode::POINTS);
-    glDrawArrays(GL_POINTS, 0, pixel_buffer.size());
-//    gray_values.resize(rgb2gray_feedback.end());
+    extractProgram_.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "shader/extract_surfels.vert"));
+    extractProgram_.attach(GlShader::fromFile(ShaderType::GEOMETRY_SHADER, "shader/copy_surfels.geom"));
+    extractProgram_.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "shader/empty.frag"));
+    extractProgram_.attach(extractFeedback_);
+    extractProgram_.link();
 
 
-    vao.release();
-    program.release();
-//    rgb2gray_feedback.release();
-    fbo.release();
+    extractFeedback_.bind();
+    extractProgram_.bind();
 
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_RASTERIZER_DISCARD);
+
+    extractProgram_.bind();
+    extractFeedback_.bind();
+    vao_surfels_.bind();
 
 
-    // retrieve result
-    std::vector<vec4> data;
-    output.download(data);
 
-    cv::Mat out_image(height,width, CV_8UC3);
-    for (int i = 0; i < width* height; i++) {
-        int x = i % width;
-        int y = i / width;
-        out_image.at<cv::Vec3b>(y,x)[0] =   data[i].x ;
-        out_image.at<cv::Vec3b>(y,x)[1] =   data[i].y ;
-        out_image.at<cv::Vec3b>(y,x)[2] =   data[i].z ;
-    }
+    extractFeedback_.begin(TransformFeedbackMode::POINTS);
+    glDrawArrays(GL_POINTS, 0, surfels.size());
+    uint32_t extractedSize = extractFeedback_.end();
 
-    cv::imshow("out_image", out_image);
-    cv::waitKey(10000);
+    extractBuffer_.resize(extractedSize);
+
+    vao_surfels_.release();
+    extractFeedback_.release();
+    extractProgram_.release();
+
+    glDisable(GL_RASTERIZER_DISCARD);
 
     return 0;
 }
