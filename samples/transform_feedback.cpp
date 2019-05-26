@@ -21,19 +21,7 @@
 #include "timer.h"
 using namespace glow;
 
-struct Surfel {
-public:
-    Surfel() {}
-    Surfel(float _x, float _y, float _z):
-        x(_x), y(_y), z(_z){}
-    float x, y, z;
-    float radius;
-    float nx, ny, nz;
-    float confidence;
 
-    int32_t timestamp;
-    float color, weight, count;
-};
 
 int main(int argc, char** argv) {
     // init window
@@ -41,46 +29,40 @@ int main(int argc, char** argv) {
     glow::inititializeGLEW();
 
     //  std::cout << "On entry: " << GlState::queryAll() << std::endl;
-    std::string image_file = "/home/pang/Documents/lenna.png";
+    std::string image_file = "/home/pang/Documents/lenna.jpeg";
     cv::Mat image = cv::imread(image_file, CV_LOAD_IMAGE_COLOR);
     uint32_t width = image.cols, height = image.rows;
 
     GlFramebuffer fbo(width, height);
 
-    glow::GlBuffer<Surfel> surfels{glow::BufferTarget::ARRAY_BUFFER,
+    glow::GlBuffer<vec4> surfels{glow::BufferTarget::ARRAY_BUFFER,
                                     glow::BufferUsage::DYNAMIC_DRAW};  // feedback stores updated surfels inside surfels_.
 
-    glow::GlBuffer<Surfel> extractBuffer_{glow::BufferTarget::ARRAY_BUFFER, glow::BufferUsage::DYNAMIC_DRAW};
+    glow::GlBuffer<vec4> extractBuffer_{glow::BufferTarget::ARRAY_BUFFER, glow::BufferUsage::DYNAMIC_DRAW};
     glow::GlProgram extractProgram_;
     glow::GlTransformFeedback extractFeedback_;
 
-    std::vector<Surfel> surfel_vec;
-    surfel_vec.push_back(Surfel(1,0,1));
-    surfel_vec.push_back(Surfel(1,1,1));
-    surfel_vec.push_back(Surfel(1,-1,1));
-    surfels.assign(surfel_vec);
+    std::vector<vec4> vec;
+    vec.push_back(vec4(1,0,1,0));
+    vec.push_back(vec4(1,1,1,1));
+    vec.push_back(vec4(1,-1,0, 1));
+    surfels.assign(vec);
     std::cout << "surfels: " << surfels.size() << std::endl;
 
-    std::vector<std::string> surfel_varyings{
-            "sfl_position_radius", "sfl_normal_confidence", "sfl_timestamp", "sfl_color_weight_count",
+    std::vector<std::string> varyings{
+            "position_out",
     };
     surfels.reserve(1000);
-    extractFeedback_.attach(surfel_varyings, surfels);
+    extractFeedback_.attach(varyings, surfels);
 
     glow::GlVertexArray vao_surfels_;
     // now we can set the vertex attributes. (the "shallow copy" of surfels now contains the correct id.
-    vao_surfels_.setVertexAttribute(0, surfels, 4, AttributeType::FLOAT, false, sizeof(Surfel),
+    vao_surfels_.setVertexAttribute(0, surfels, 4, AttributeType::FLOAT, false, sizeof(vec4),
                                     reinterpret_cast<GLvoid*>(0));
-    vao_surfels_.setVertexAttribute(1, surfels, 4, AttributeType::FLOAT, false, sizeof(Surfel),
-                                    reinterpret_cast<GLvoid*>(4 * sizeof(GLfloat)));
-    vao_surfels_.setVertexAttribute(2, surfels, 1, AttributeType::INT, false, sizeof(Surfel),
-                                    reinterpret_cast<GLvoid*>(8 * sizeof(GLfloat)));
-    vao_surfels_.setVertexAttribute(3, surfels, 3, AttributeType::FLOAT, false, sizeof(Surfel),
-                                    reinterpret_cast<GLvoid*>(offsetof(Surfel, color)));
 
-    extractProgram_.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "shader/extract_surfels.vert"));
-    extractProgram_.attach(GlShader::fromFile(ShaderType::GEOMETRY_SHADER, "shader/copy_surfels.geom"));
-    extractProgram_.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "shader/empty.frag"));
+
+    extractProgram_.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/extract_surfels.vert"));
+    extractProgram_.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/empty.frag"));
     extractProgram_.attach(extractFeedback_);
     extractProgram_.link();
 
@@ -105,6 +87,15 @@ int main(int argc, char** argv) {
     vao_surfels_.release();
     extractFeedback_.release();
     extractProgram_.release();
+
+
+    std::vector<vec4> download_surfels;
+    extractBuffer_.get(download_surfels);
+    std::cout << "download_surfels: " << download_surfels.size() << std::endl;
+
+    for (auto i : download_surfels) {
+        std::cout << i.x << " " << i.y << " " <<  i.z << " " << i.w << std::endl;
+    }
 
     glDisable(GL_RASTERIZER_DISCARD);
 
