@@ -6,7 +6,7 @@ uniform sampler2D tex_R;
 uniform sampler2D tex_G;
 uniform sampler2D tex_B;
 
-out vec3 color;
+out vec4 color;
 
 
 void main()
@@ -15,5 +15,5 @@ void main()
   float r = texture(tex_R, coords).r;
   float g = texture(tex_G, coords).r;
   float b = texture(tex_B, coords).r;
-  color = vec3(r,g,b);
+  color = vec4(r,g,b,1);
 }
