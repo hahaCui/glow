@@ -8,7 +8,7 @@ uniform float fRadius;
 uniform float nWidth;
 uniform float nHeight;
 
-out vec3 color;
+out vec4 color;
 
 
 void main()
@@ -35,5 +35,5 @@ void main()
 		}
 	}
 	vec3Result = fSum / fTotal;
-	color = vec3(vec3Result);
+	color = vec4(vec3Result, 0);
 }

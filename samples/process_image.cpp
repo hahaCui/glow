@@ -55,20 +55,21 @@ int main(int argc, char** argv) {
     float convolution_radius = 5;
     _CheckGlError(__FILE__, __LINE__);
     //  std::cout << "On entry: " << GlState::queryAll() << std::endl;
-    std::string image_file = "/home/pang/Documents/lenna.jpeg";
+    std::string image_file = "/home/pang/000000_10.png";
     cv::Mat image = cv::imread(image_file, CV_LOAD_IMAGE_COLOR);
     uint32_t width = image.cols, height = image.rows;
 
-    std::vector<float> values(3 * width * height, 0);
+    std::vector<float> values(4 * width * height, 0);
     for(auto i = 0 ; i < image.rows; i++)
         for(auto j = 0; j < image.cols; j++) {
             float r = image.at<cv::Vec3b>(i,j)[0];
             float g = image.at<cv::Vec3b>(i,j)[1];
             float b = image.at<cv::Vec3b>(i,j)[2];
 
-            values[3 * (i * width +j)] = (float)r;
-            values[3 * (i * width +j) + 1] = (float)g;
-            values[3 * (i * width +j) + 2] = (float)b;
+            values[4 * (i * width +j)] = (float)r;
+            values[4 * (i * width +j) + 1] = (float)g;
+            values[4 * (i * width +j) + 2] = (float)b;
+            values[4 * (i * width +j) + 3] = 1;
         }
 
     cv::Mat cpu_smoothed_image;
@@ -84,11 +85,11 @@ int main(int argc, char** argv) {
 
     _CheckGlError(__FILE__, __LINE__);
 
-    GlTexture input{width, height, TextureFormat::RGB_FLOAT};
+    GlTexture input{width, height, TextureFormat::RGBA_FLOAT};
 
-    input.assign(PixelFormat::RGB, PixelType::FLOAT, &values[0]);
+    input.assign(PixelFormat::RGBA, PixelType::FLOAT, &values[0]);
 
-    GlTexture output{width, height, TextureFormat::RGB_FLOAT};
+    GlTexture output{width, height, TextureFormat::RGBA_FLOAT};
     GlRenderbuffer rbo(width, height, RenderbufferFormat::DEPTH_STENCIL);
 
     CheckGlError();
