@@ -19,3 +19,6 @@ target_link_libraries(multi_samplers ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${Ope
 
 add_executable(transform_feedback transform_feedback.cpp)
 target_link_libraries(transform_feedback ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
+
+add_executable(index_buffer index_buffer.cpp)
+target_link_libraries(index_buffer ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
