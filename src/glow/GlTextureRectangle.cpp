@@ -427,6 +427,36 @@ bool GlTextureRectangle::save(const std::string& filename) const {
   return false;
 }
 
+
+
+bool GlTextureRectangle::saveToVector(std::vector<char>& data) const {
+  // TODO: implement saving to image. (libpng, etc.)
+  // note: texture transfer is always specified by pixel transfer; therefore we can have arbitrary output,...
+
+
+  std::vector<float> colors(width_ * height_ * 3);
+  GLuint id = bindTransparently();
+  glGetTexImage(GL_TEXTURE_RECTANGLE, 0, GL_RGB, GL_FLOAT, reinterpret_cast<GLvoid*>(&colors[0]));
+  CheckGlError();
+  releaseTransparently(id);
+
+  data.resize(width_ * height_ * 3);
+
+  for (uint32_t x = 0; x < width_; ++x) {
+    for (uint32_t y = 0; y < height_; ++y) {
+      int32_t r = 255 * colors[3 * (x + (height_ - 1 - y) * width_)];
+      int32_t g = 255 * colors[3 * (x + (height_ - 1 - y) * width_) + 1];
+      int32_t b = 255 * colors[3 * (x + (height_ - 1 - y) * width_) + 2];
+      data[3 * (x + y * width_)] = (char)std::max(std::min(255, r), 0);
+      data[3 * (x + y * width_) + 1] = (char)std::max(std::min(255, g), 0);
+      data[3 * (x + y * width_) + 2] = (char)std::max(std::min(255, b), 0);
+    }
+  }
+
+
+  return false;
+}
+
 GlTextureRectangle GlTextureRectangle::loadTexture(const std::string& filename) {
   assert(false && "Loading of textures not implemented.");
   // TODO: implement loading to image. (libpng, etc.)

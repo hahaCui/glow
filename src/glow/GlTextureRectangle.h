@@ -131,6 +131,7 @@ class GlTextureRectangle : public GlObject {
    *  \return true, if file could be written to the specified location. false, otherwise.
    **/
   bool save(const std::string& filename) const;
+  bool saveToVector(std::vector<char>& data) const;
 
   /** \brief load texture from specified file with given filename.
    *
