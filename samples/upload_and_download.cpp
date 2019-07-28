@@ -116,6 +116,8 @@ cv::Mat gray_method0(const cv::Mat& image ) {
 }
 
 
+
+
 int main(int argc, char** argv) {
     // init window
     glow::X11OffscreenContext ctx(3, 3);  // OpenGl context
