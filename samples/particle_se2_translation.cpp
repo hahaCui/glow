@@ -34,7 +34,7 @@ std::vector<vec2> genrateLaserScan(int beam_cnt, int max_range) {
         meas.push_back(pt);
     }
     return meas;
-};
+}
 
 std::vector<Eigen::Vector3d> generateSE2TransformationHypothesis(int cnt) {
     std::vector<Eigen::Vector3d> hypothesis;
@@ -61,7 +61,6 @@ void transfrom_cpu(const std::vector<vec2>& pts,
         const std::vector<Eigen::Vector3d>& se2_transformations) {
     for (auto se2:se2_transformations) {
         Eigen::Matrix2d R = rot(se2(2));
-
         for (auto pt : pts) {
             auto transformed = R*Eigen::Vector2d(pt.x, pt.y) + se2.head<2>();
         }
@@ -80,8 +79,6 @@ int main(int argc, char** argv) {
     std::vector<Eigen::Vector3d> se2_particles = generateSE2TransformationHypothesis(se2_particles_cnt);
     std::cout << "generate meas: " << laserMeas.size() << std::endl;
     std::cout << "generate se2 : " << se2_particles.size() << std::endl;
-
-
 
 
     Timer cpu_timer, gpu_timer;
@@ -156,8 +153,6 @@ int main(int argc, char** argv) {
     vao.enableVertexAttribute(1);
 
 
-    // todo: pass simulated laser points use glUniform3fv
-
     program.setUniform(GlUniform<std::vector<vec2>>("laser_points", laserMeas));
 
     glDisable(GL_DEPTH_TEST);
@@ -196,10 +191,6 @@ int main(int argc, char** argv) {
 //
 //    cv::imshow("out_image", out_image);
 //    cv::waitKey(10000);
-
-
-
-
 
     return 0;
 }
