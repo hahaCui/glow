@@ -28,12 +28,6 @@ int main(int argc, char** argv) {
     glow::X11OffscreenContext ctx(3,3);  // OpenGl context
     glow::inititializeGLEW();
 
-    //  std::cout << "On entry: " << GlState::queryAll() << std::endl;
-    std::string image_file = "/home/pang/Documents/lenna.jpeg";
-    cv::Mat image = cv::imread(image_file, CV_LOAD_IMAGE_COLOR);
-    uint32_t width = image.cols, height = image.rows;
-
-    GlFramebuffer fbo(width, height);
 
     glow::GlBuffer<vec4> input_vec{glow::BufferTarget::ARRAY_BUFFER,
                                     glow::BufferUsage::DYNAMIC_DRAW};  // feedback stores updated input_vec inside input_vec.
