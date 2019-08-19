@@ -43,7 +43,7 @@ std::vector<Eigen::Vector3d> generateSE2TransformationHypothesis(int cnt) {
         double theta = i * delta_theta;
         double range = abs(sin(theta)) * 250;  //   In order to visualize the transformations
 
-        Eigen::Vector3d pt(range*sin(theta), range*cos(theta), theta);
+        Eigen::Vector3d pt(abs(range*sin(theta)), abs(range*cos(theta)), theta);
         hypothesis.push_back(pt);
     }
     return hypothesis;
@@ -152,6 +152,14 @@ int main(int argc, char** argv) {
     vao.enableVertexAttribute(0);
     vao.enableVertexAttribute(1);
 
+
+    // todo: pass simulated laser points use glUniform3fv
+
+    std::vector<vec2> point_vec;
+    point_vec.push_back(vec2(255,0));
+    point_vec.push_back(vec2(0,255));
+
+    program.setUniform(GlUniform<std::vector<vec2>>("laser_points", point_vec));
 
     glDisable(GL_DEPTH_TEST);
 

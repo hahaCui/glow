@@ -1,3 +1,4 @@
+#include <vector>
 #include "GlUniform.h"
 #include "glexception.h"
 #include "glutil.h"
@@ -35,6 +36,15 @@ void GlUniform<vec4>::bind(GLuint program_id) const {
   glUniform4fv(loc, 1, &data_.x);
 }
 
+
+// add array of vec4
+template <>
+void GlUniform<std::vector<vec4>>::bind(GLuint program_id) const {
+    GLint loc = glGetUniformLocation(program_id, name_.c_str());
+    //  assert(loc >= 0 && "Warning: Uniform unknown or unused in program.");
+    glUniform4fv(loc, data_.size(), reinterpret_cast<const GLfloat *>(data_.data()));
+}
+
 template <>
 void GlUniform<vec3>::bind(GLuint program_id) const {
   GLint loc = glGetUniformLocation(program_id, name_.c_str());
@@ -42,11 +52,29 @@ void GlUniform<vec3>::bind(GLuint program_id) const {
   glUniform3fv(loc, 1, &data_.x);
 }
 
+
+// add array of vec3
+template <>
+void GlUniform<std::vector<vec3>>::bind(GLuint program_id) const {
+    GLint loc = glGetUniformLocation(program_id, name_.c_str());
+    //  assert(loc >= 0 && "Warning: Uniform unknown or unused in program.");
+    glUniform3fv(loc, data_.size(), reinterpret_cast<const GLfloat *>(data_.data()));
+}
+
+
 template <>
 void GlUniform<vec2>::bind(GLuint program_id) const {
   GLint loc = glGetUniformLocation(program_id, name_.c_str());
   //  assert(loc >= 0 && "Warning: Uniform unknown or unused in program.");
   glUniform2fv(loc, 1, &data_.x);
+}
+
+
+template <>
+void GlUniform<std::vector<vec2>>::bind(GLuint program_id) const {
+    GLint loc = glGetUniformLocation(program_id, name_.c_str());
+    //  assert(loc >= 0 && "Warning: Uniform unknown or unused in program.");
+    glUniform2fv(loc, data_.size(), reinterpret_cast<const GLfloat *>(data_.data()));
 }
 
 // geometry.h types.
