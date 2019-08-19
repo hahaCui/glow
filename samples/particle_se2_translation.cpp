@@ -23,14 +23,14 @@
 using namespace glow;
 
 
-std::vector<Eigen::Vector2d> genrateLaserScan(int beam_cnt, int max_range) {
-    std::vector<Eigen::Vector2d> meas;
+std::vector<vec2> genrateLaserScan(int beam_cnt, int max_range) {
+    std::vector<vec2> meas;
     double delta_theta = M_PI*2 / beam_cnt;
     for (int i = 0; i < beam_cnt; i++) {
         double theta = i * delta_theta;
         double range = abs(sin(theta)) * max_range;
 
-        Eigen::Vector2d pt(range*sin(theta), range*cos(theta));
+        vec2 pt((range*sin(theta)), (range*cos(theta)));
         meas.push_back(pt);
     }
     return meas;
@@ -57,13 +57,13 @@ Eigen::Matrix2d rot(const double theta) {
     return rotation;
 }
 
-void transfrom_cpu(const std::vector<Eigen::Vector2d>& pts,
+void transfrom_cpu(const std::vector<vec2>& pts,
         const std::vector<Eigen::Vector3d>& se2_transformations) {
     for (auto se2:se2_transformations) {
         Eigen::Matrix2d R = rot(se2(2));
 
         for (auto pt : pts) {
-            auto transformed = R*pt + se2.head<2>();
+            auto transformed = R*Eigen::Vector2d(pt.x, pt.y) + se2.head<2>();
         }
     }
 }
@@ -71,12 +71,12 @@ void transfrom_cpu(const std::vector<Eigen::Vector2d>& pts,
 int main(int argc, char** argv) {
 
     /// simulate
-    int beam_cnt = 1440;
-    int max_range = 30;
+    int beam_cnt = 360;
+    int max_range = 200;
 
-    int se2_particles_cnt = 300000;
+    int se2_particles_cnt = 3000;
 
-    std::vector<Eigen::Vector2d> laserMeas = genrateLaserScan(beam_cnt, max_range);
+    std::vector<vec2> laserMeas = genrateLaserScan(beam_cnt, max_range);
     std::vector<Eigen::Vector3d> se2_particles = generateSE2TransformationHypothesis(se2_particles_cnt);
     std::cout << "generate meas: " << laserMeas.size() << std::endl;
     std::cout << "generate se2 : " << se2_particles.size() << std::endl;
@@ -87,10 +87,10 @@ int main(int argc, char** argv) {
     Timer cpu_timer, gpu_timer;
 
     /// CPU
-//    cpu_timer.start();
-//    transfrom_cpu(laserMeas, se2_particles);
-//    cpu_timer.stop();
-//    std::cout << "cpu transform: " << cpu_timer.elapsedMilliseconds() << "ms"<< std::endl;
+    cpu_timer.start();
+    transfrom_cpu(laserMeas, se2_particles);
+    cpu_timer.stop();
+    std::cout << "cpu transform: " << cpu_timer.elapsedMilliseconds() << "ms"<< std::endl;
 
 
 
@@ -100,10 +100,13 @@ int main(int argc, char** argv) {
     glow::inititializeGLEW();
 
     //  std::cout << "On entry: " << GlState::queryAll() << std::endl;
-    uint32_t width = 600, height = 500;  // 3000
+    uint32_t width = 60, height = 50;  // 3000
     GlFramebuffer fbo(width, height);
 
 //    ASSERT_NO_THROW(_CheckGlError(__FILE__, __LINE__));
+
+    gpu_timer.start();
+
 
     GlTexture output{width, height, TextureFormat::RGBA_FLOAT};
     GlRenderbuffer rbo(width, height, RenderbufferFormat::DEPTH_STENCIL);
@@ -155,11 +158,7 @@ int main(int argc, char** argv) {
 
     // todo: pass simulated laser points use glUniform3fv
 
-    std::vector<vec2> point_vec;
-    point_vec.push_back(vec2(255,0));
-    point_vec.push_back(vec2(0,255));
-
-    program.setUniform(GlUniform<std::vector<vec2>>("laser_points", point_vec));
+    program.setUniform(GlUniform<std::vector<vec2>>("laser_points", laserMeas));
 
     glDisable(GL_DEPTH_TEST);
 
@@ -177,22 +176,26 @@ int main(int argc, char** argv) {
 
     glEnable(GL_DEPTH_TEST);
 
+    gpu_timer.stop();
+    std::cout << std::endl;
+    std::cout << "gpu transform: " << gpu_timer.elapsedMilliseconds() << "ms"<< std::endl;
 
-    // retrieve result
-    std::vector<vec4> data;
-    output.download(data);
 
-    cv::Mat out_image(height,width, CV_8UC3);
-    for (int i = 0; i < width* height; i++) {
-        int x = i % width;
-        int y = i / width;
-        out_image.at<cv::Vec3b>(y,x)[0] =   data[i].x ;
-        out_image.at<cv::Vec3b>(y,x)[1] =   data[i].y ;
-        out_image.at<cv::Vec3b>(y,x)[2] =   data[i].z ;
-    }
-
-    cv::imshow("out_image", out_image);
-    cv::waitKey(10000);
+//    // retrieve result
+//    std::vector<vec4> data;
+//    output.download(data);
+//
+//    cv::Mat out_image(height,width, CV_8UC3);
+//    for (int i = 0; i < width* height; i++) {
+//        int x = i % width;
+//        int y = i / width;
+//        out_image.at<cv::Vec3b>(y,x)[0] =   data[i].x ;
+//        out_image.at<cv::Vec3b>(y,x)[1] =   data[i].y ;
+//        out_image.at<cv::Vec3b>(y,x)[2] =   data[i].z ;
+//    }
+//
+//    cv::imshow("out_image", out_image);
+//    cv::waitKey(10000);
 
 
 

@@ -4,7 +4,7 @@ layout (location = 0) in vec4 position;
 layout (location = 1) in vec4 se3_particle;
 
 
-uniform vec2 laser_points[2];
+uniform vec2 laser_points[360];
 
 out vec4 color_rgb;
 
@@ -19,6 +19,21 @@ void main()
 //                    se3_particle.z, 0);
 
 
-    color_rgb = vec4(laser_points[0], 0, 0);
+    float c = cos(se3_particle.z);
+    float s = sin(se3_particle.z);
+
+
+
+    for (int i = 0; i < 360; i ++) {
+        // for debug
+//        if (laser_points[i].x > 180  && laser_points[i].y > 0 ) {
+//            color_rgb = vec4(laser_points[i], 0, 0);
+//            break;
+//        }
+
+        float xx = c*laser_points[i].x - s * laser_points[i].y + se3_particle.x;
+        float yy = s*laser_points[i].x + c * laser_points[i].y + se3_particle.y;
+    }
+
   
 }
