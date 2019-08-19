@@ -22,3 +22,6 @@ target_link_libraries(transform_feedback ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} $
 
 add_executable(index_buffer index_buffer.cpp)
 target_link_libraries(index_buffer ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
+
+add_executable(particle_se2_translation particle_se2_translation.cpp)
+target_link_libraries(particle_se2_translation ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
