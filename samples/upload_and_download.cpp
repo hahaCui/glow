@@ -60,7 +60,7 @@ cv::Mat3b rgb_method0(const cv::Mat& image ) {
 }
 
 
-cv::Mat3b rgb_method1(const cv::Mat& image ) {
+cv::Mat rgb_method1(const cv::Mat& image ) {
     uint32_t width = image.cols, height = image.rows;
 
    cv::Mat float_image;
@@ -74,17 +74,12 @@ cv::Mat3b rgb_method1(const cv::Mat& image ) {
     std::vector<vec4> data;
     input.download(data);
 
-    cv::Mat out_image(height,width, CV_8UC3);
-    for (int i = 0; i < width* height; i++) {
-        int x = i % width;
-        int y = i / width;
-        out_image.at<cv::Vec3b>(y,x)[0] =   data[i].x ;
-        out_image.at<cv::Vec3b>(y,x)[1] =   data[i].y ;
-        out_image.at<cv::Vec3b>(y,x)[2] =   data[i].z ;
-    }
+    cv::Mat out_image1(height,width, CV_32FC4);
+    memcpy(out_image1.ptr(), data.data(), height*width*4* sizeof(float));
 
-
-    return out_image;
+    cv::Mat out_image2(height,width, CV_8UC3);
+    out_image1.convertTo(out_image2, CV_8UC3);
+    return out_image2;
 
 }
 
@@ -135,7 +130,7 @@ int main(int argc, char** argv) {
 
 
     cv::Mat3b rgb_0 = rgb_method0(image);
-    cv::Mat3b rgb_1 = rgb_method1(image);
+    cv::Mat rgb_1 = rgb_method1(image);
     cv::Mat gray0 = gray_method0(gray_image);
 
 
