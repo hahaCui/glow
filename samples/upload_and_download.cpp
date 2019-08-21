@@ -66,7 +66,7 @@ cv::Mat3b rgb_method1(const cv::Mat& image ) {
    cv::Mat float_image;
    image.convertTo(float_image, CV_32FC3);
 
-    GlTexture input{width, height, TextureFormat::RGB_FLOAT};
+    GlTexture input{width, height, TextureFormat::RGBA_FLOAT};
 
     input.assign(PixelFormat::RGB, PixelType::FLOAT, float_image.ptr());
 
@@ -82,6 +82,7 @@ cv::Mat3b rgb_method1(const cv::Mat& image ) {
         out_image.at<cv::Vec3b>(y,x)[1] =   data[i].y ;
         out_image.at<cv::Vec3b>(y,x)[2] =   data[i].z ;
     }
+
 
     return out_image;
 
@@ -125,7 +126,7 @@ int main(int argc, char** argv) {
 
     _CheckGlError(__FILE__, __LINE__);
     //  std::cout << "On entry: " << GlState::queryAll() << std::endl;
-    std::string image_file = "/home/pang/Documents/lenna.jpeg";
+    std::string image_file = "/home/pang/Documents/000000_11.png";
     cv::Mat image = cv::imread(image_file, CV_LOAD_IMAGE_COLOR);
     cv::Mat gray_image;
     cv::cvtColor(image, gray_image, CV_RGB2GRAY);
