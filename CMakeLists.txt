@@ -6,6 +6,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem system)
 find_package(X11)
+find_package(Eigen3 REQUIRED)
 
 find_package(catkin)
 
@@ -17,7 +18,7 @@ if(catkin_FOUND)
   )
 endif()
 
-include_directories(${catkin_INCLUDE_DIRS} src/)
+include_directories(${catkin_INCLUDE_DIRS}  ${EIGEN3_INCLUDE_DIR} src/)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   set(CMAKE_CXX_FLAGS "-std=c++11 -g2 -DDEBUG ${CMAKE_CXX_FLAGS}")

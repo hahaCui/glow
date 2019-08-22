@@ -31,3 +31,6 @@ add_executable(particle_se2_translation particle_se2_translation.cpp)
 target_link_libraries(particle_se2_translation ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
 
 
+add_executable(detect_points_in_view detect_points_in_view.cpp)
+target_link_libraries(detect_points_in_view ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
+
