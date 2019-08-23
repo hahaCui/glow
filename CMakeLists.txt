@@ -64,9 +64,10 @@ if(X11_FOUND)
     src/glow/util/RoSeCamera.cpp
     src/glow/util/FpsCamera
     src/glow/util/RandomColorGenerator.cpp
+    src/glow/util/GLContext.cpp
     src/glow/util/X11OffscreenContext.cpp)
 
-  target_link_libraries(glow_util ${X11_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
+  target_link_libraries(glow_util   ${X11_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
 
 else()
   add_library(glow_util

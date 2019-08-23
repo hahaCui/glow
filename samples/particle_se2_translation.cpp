@@ -17,6 +17,8 @@
 #include <glow/GlCapabilities.h>
 #include <glow/GlState.h>
 #include <glow/util/X11OffscreenContext.h>
+#include <glow/util/GLContext.h>
+
 
 #include <time.h>
 #include "timer.h"
@@ -93,9 +95,10 @@ int main(int argc, char** argv) {
 
     /// GPU
     // init window
-    glow::X11OffscreenContext ctx(3,3);  // OpenGl context
-    glow::inititializeGLEW();
+//    glow::X11OffscreenContext ctx(3,3);  // OpenGl context
+//    glow::inititializeGLEW();
 
+    GLAutoContext glAutoContext;
 //    std::cout << "On entry: " << GlState::queryAll() << std::endl;
     uint32_t width = 600, height = 500;  // 3000
     GlFramebuffer fbo(width, height);
