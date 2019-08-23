@@ -189,10 +189,14 @@ int main() {
 
 
     int total_in_view_cnt = 0;
+    cv::Mat1b point_image(image_height, image_width, CV_8UC1);
+    point_image.setTo(0);
     for (auto i : download_input_vec) {
         if(i.isInView) {
             total_in_view_cnt ++;
             std::cout << i.x << " " << i.y << " " << i.z << " " << i.r << " " << i.g << " " << i.b << " " << i.u << " " << i.v  << " " << i.isInView<< std::endl;
+
+            point_image.at<uchar>(i.v, i.u)= i.r;
 
         }
     }
@@ -201,6 +205,8 @@ int main() {
 
     std::cout << "timing: " << gpu_timer.elapsedMilliseconds() << std::endl;
 
+    cv::imshow("point_image", point_image);
+    cv::waitKey(20000);
 
     return 0;
 }
