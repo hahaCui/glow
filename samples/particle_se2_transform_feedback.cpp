@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
 
     /// CPU
     cpu_timer.start();
-    //transfrom_cpu(laserMeas, se2_particles);
+    transfrom_cpu(laserMeas, se2_particles);
     cpu_timer.stop();
     std::cout << "cpu transform: " << cpu_timer.elapsedMilliseconds() << "ms"<< std::endl;
 
@@ -115,6 +115,9 @@ int main(int argc, char** argv) {
     }
     input_vec.assign(vec);
     std::cout << "input_vec: " << input_vec.size() << std::endl;
+
+    gpu_timer.start();
+
 
     std::vector<std::string> varyings{
             "result_out",
@@ -152,14 +155,19 @@ int main(int argc, char** argv) {
 
     extractBuffer.resize(extractedSize);
 
+
     std::vector<vec4> download_input_vec;
     download_input_vec.reserve(10000);
     extractBuffer.get(download_input_vec);
+    gpu_timer.stop();
+
+    std::cout << "gpu transform: " << gpu_timer.elapsedMilliseconds() << "ms"<< std::endl;
+
     std::cout << "download_input_vec: " << download_input_vec.size() << std::endl;
 
-    for (auto i : download_input_vec) {
-        std::cout << i.x << " " << i.y << " " <<  i.z << " " << i.w << std::endl;
-    }
+//    for (auto i : download_input_vec) {
+//        std::cout << i.x << " " << i.y << " " <<  i.z << " " << i.w << std::endl;
+//    }
     
     vao_input_vec.release();
     extractFeedback.release();
