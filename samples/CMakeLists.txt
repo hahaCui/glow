@@ -18,6 +18,10 @@ target_link_libraries(process_image ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${Open
 add_executable(vao_buffer vao_buffer.cpp)
 target_link_libraries(vao_buffer ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
 
+add_executable(sampler_sample sampler_sample.cpp)
+target_link_libraries(sampler_sample ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
+
+
 add_executable(multi_samplers multi_samplers.cpp)
 target_link_libraries(multi_samplers ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
 

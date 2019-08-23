@@ -58,8 +58,8 @@ struct PointInView {
     float u,v, isInView;
 };
 int main() {
-    std::string image_file = "/home/pang/data/dataset/kitti/00/image_0/000000.png";
-    std::string lidarscan_file = "/home/pang/data/dataset/kitti/00/velodyne/000000.bin";
+    std::string image_file = "/home/pang/disk/dataset/kitti/00/image_0/000000.png";
+    std::string lidarscan_file = "/home/pang/disk/dataset/kitti/00/velodyne/000000.bin";
 
     cv::Mat image = cv::imread(image_file, CV_LOAD_IMAGE_COLOR);
 //    cv::imshow("image", image);
