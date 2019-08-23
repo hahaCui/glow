@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
     int beam_cnt = 360;
     int max_range = 200;
 
-    int se2_particles_cnt = 300000;
+    int se2_particles_cnt = 3000;
 
     std::vector<vec2> laserMeas = genrateLaserScan(beam_cnt, max_range);
     std::vector<Eigen::Vector3d> se2_particles = generateSE2TransformationHypothesis(se2_particles_cnt);
@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
 
     GLAutoContext glAutoContext;
 //    std::cout << "On entry: " << GlState::queryAll() << std::endl;
-    uint32_t width = 600, height = 500;  // 3000
+    uint32_t width = 60, height = 50;  // 3000
     GlFramebuffer fbo(width, height);
 
 //    ASSERT_NO_THROW(_CheckGlError(__FILE__, __LINE__));

@@ -1,7 +1,7 @@
 #include "GLContext.h"
 #include <assert.h>
 
-//#define GL_BUILD_FOR_ANDROID
+//#define __ANDROID__
 #ifdef __ANDROID__
 #include <EGL/egl.h>
 class GLContext::nativeContext
@@ -31,7 +31,7 @@ class GLContext::nativeContext
                 EGL_CONTEXT_CLIENT_VERSION, 2,
                 EGL_NONE
             };
-            gContext = eglCreateContext(gDisplay, surfaceConfig, NULL, contextAttribs);
+            gContext = eglCreateContext(gDisplay, surfaceConfig, nullptr, contextAttribs);
 
 
             static const EGLint surfaceAttribs[] = {

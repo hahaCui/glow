@@ -28,3 +28,6 @@ target_link_libraries(particle_se2_translation ${OPENGL_LIBRARIES} ${GLEW_LIBRAR
 
 add_executable(egl_opengl_sample egl_opengl_sample.cpp)
 target_link_libraries(egl_opengl_sample ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
+
+add_executable(particle_se2_transform_feedback particle_se2_transform_feedback.cpp)
+target_link_libraries(particle_se2_transform_feedback ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )

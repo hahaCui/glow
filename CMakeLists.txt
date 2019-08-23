@@ -9,6 +9,7 @@ find_package(X11)
 
 find_package(catkin)
 
+set(CMAKE_BUILD_TYPE  Debug)
 if(catkin_FOUND)
   catkin_package(
     INCLUDE_DIRS src/

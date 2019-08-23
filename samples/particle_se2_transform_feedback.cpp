@@ -22,9 +22,73 @@
 #include "timer.h"
 using namespace glow;
 
+std::vector<vec2> genrateLaserScan(int beam_cnt, int max_range) {
+    std::vector<vec2> meas;
+    double delta_theta = M_PI*2 / beam_cnt;
+    for (int i = 0; i < beam_cnt; i++) {
+        double theta = i * delta_theta;
+        double range = abs(sin(theta)) * max_range;
 
+        vec2 pt((range*sin(theta)), (range*cos(theta)));
+        meas.push_back(pt);
+    }
+    return meas;
+}
+
+std::vector<Eigen::Vector3d> generateSE2TransformationHypothesis(int cnt) {
+    std::vector<Eigen::Vector3d> hypothesis;
+    double delta_theta = M_PI*2 / cnt;
+    for (int i = 0; i < cnt; i++) {
+        double theta = i * delta_theta;
+        double range = abs(sin(theta)) * 250;  //   In order to visualize the transformations
+
+        Eigen::Vector3d pt(abs(range*sin(theta)), abs(range*cos(theta)), theta);
+        hypothesis.push_back(pt);
+    }
+    return hypothesis;
+}
+
+Eigen::Matrix2d rot(const double theta) {
+    Eigen::Matrix2d rotation;
+    double c = cos(theta);
+    double s = sin(theta);
+    rotation << c, -s, s, c;
+    return rotation;
+}
+
+void transfrom_cpu(const std::vector<vec2>& pts,
+                   const std::vector<Eigen::Vector3d>& se2_transformations) {
+    for (auto se2:se2_transformations) {
+        Eigen::Matrix2d R = rot(se2(2));
+        for (auto pt : pts) {
+            auto transformed = R*Eigen::Vector2d(pt.x, pt.y) + se2.head<2>();
+        }
+    }
+}
 
 int main(int argc, char** argv) {
+
+    /// simulate
+    int beam_cnt = 360;
+    int max_range = 200;
+
+    int se2_particles_cnt = 3000;
+
+    std::vector<vec2> laserMeas = genrateLaserScan(beam_cnt, max_range);
+    std::vector<Eigen::Vector3d> se2_particles = generateSE2TransformationHypothesis(se2_particles_cnt);
+    std::cout << "generate meas: " << laserMeas.size() << std::endl;
+    std::cout << "generate se2 : " << se2_particles.size() << std::endl;
+
+
+    Timer cpu_timer, gpu_timer;
+
+    /// CPU
+    cpu_timer.start();
+    //transfrom_cpu(laserMeas, se2_particles);
+    cpu_timer.stop();
+    std::cout << "cpu transform: " << cpu_timer.elapsedMilliseconds() << "ms"<< std::endl;
+
+
     // init window
 //    glow::X11OffscreenContext ctx(3,3);  // OpenGl context
 //    glow::inititializeGLEW();
@@ -39,16 +103,23 @@ int main(int argc, char** argv) {
     glow::GlTransformFeedback extractFeedback;
 
     std::vector<vec4> vec;
-    vec.push_back(vec4(1,0,1,0));
-    vec.push_back(vec4(1,1,1,1));
-    vec.push_back(vec4(1,-1,0, 1));
+
+    for (auto se2 : se2_particles) {
+        vec4 p;
+        p.x = se2(0);
+        p.y = se2(1);
+        p.z = se2(2);
+        p.w = 0;
+        vec.push_back(p);
+
+    }
     input_vec.assign(vec);
     std::cout << "input_vec: " << input_vec.size() << std::endl;
 
     std::vector<std::string> varyings{
-            "position_out",
+            "result_out",
     };
-    extractBuffer.reserve(100);
+    extractBuffer.reserve(10000);
     extractFeedback.attach(varyings, extractBuffer);
 
     glow::GlVertexArray vao_input_vec;
@@ -57,11 +128,12 @@ int main(int argc, char** argv) {
                                     reinterpret_cast<GLvoid*>(0));
 
 
-    extractProgram.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/extract_vec.vert"));
+    extractProgram.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/particle_se2_transform_feedback.vert"));
     extractProgram.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/empty.frag"));
     extractProgram.attach(extractFeedback);
     extractProgram.link();
 
+    extractProgram.setUniform(GlUniform<std::vector<vec2>>("laser_points", laserMeas));
 
     extractFeedback.bind();
     extractProgram.bind();
@@ -81,7 +153,7 @@ int main(int argc, char** argv) {
     extractBuffer.resize(extractedSize);
 
     std::vector<vec4> download_input_vec;
-    download_input_vec.reserve(3);
+    download_input_vec.reserve(10000);
     extractBuffer.get(download_input_vec);
     std::cout << "download_input_vec: " << download_input_vec.size() << std::endl;
 
