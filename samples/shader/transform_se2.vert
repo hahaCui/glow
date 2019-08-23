@@ -14,11 +14,15 @@ void main()
 
 
   // for visualize se2 transformations
-//  color_rgb = vec4(se3_particle.x < 255? se3_particle.x: 255,
-//                  se3_particle.y < 255? se3_particle.y: 255,
-//                    se3_particle.z, 0);
 
 
+    if (se3_particle.x > 0 && se3_particle.x < 255 && se3_particle.y > 0 && se3_particle.y < 255) {
+        color_rgb = vec4(se3_particle.x ,
+                          se3_particle.y ,
+                            se3_particle.z, 0);
+    } else {
+        color_rgb = vec4(0,0,0,0);
+    }
     float c = cos(se3_particle.z);
     float s = sin(se3_particle.z);
 

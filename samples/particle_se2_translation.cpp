@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     int beam_cnt = 360;
     int max_range = 200;
 
-    int se2_particles_cnt = 3000;
+    int se2_particles_cnt = 300000;
 
     std::vector<vec2> laserMeas = genrateLaserScan(beam_cnt, max_range);
     std::vector<Eigen::Vector3d> se2_particles = generateSE2TransformationHypothesis(se2_particles_cnt);
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
 
     /// CPU
     cpu_timer.start();
-    transfrom_cpu(laserMeas, se2_particles);
+    //transfrom_cpu(laserMeas, se2_particles);
     cpu_timer.stop();
     std::cout << "cpu transform: " << cpu_timer.elapsedMilliseconds() << "ms"<< std::endl;
 
@@ -96,8 +96,8 @@ int main(int argc, char** argv) {
     glow::X11OffscreenContext ctx(3,3);  // OpenGl context
     glow::inititializeGLEW();
 
-    //  std::cout << "On entry: " << GlState::queryAll() << std::endl;
-    uint32_t width = 60, height = 50;  // 3000
+//    std::cout << "On entry: " << GlState::queryAll() << std::endl;
+    uint32_t width = 600, height = 500;  // 3000
     GlFramebuffer fbo(width, height);
 
 //    ASSERT_NO_THROW(_CheckGlError(__FILE__, __LINE__));
@@ -119,10 +119,10 @@ int main(int argc, char** argv) {
     program.link();
 
     GlBuffer<vec4> pixel_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
-    GlBuffer<vec4> color_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
+    GlBuffer<vec4> particle_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
 
     std::vector<vec4> pixels;
-    std::vector<vec4> colors;
+    std::vector<vec4> particles;
     for (uint32_t i = 0; i < height; ++i) {
         for (uint32_t j = 0; j < width; ++j) {
             vec4 v;
@@ -137,17 +137,17 @@ int main(int argc, char** argv) {
             v.y = se2_particles.at(index)[1];
             v.z = se2_particles.at(index)[2];
             v.w = 0;
-            colors.push_back(v);
+            particles.push_back(v);
         }
     }
 
     pixel_buffer.assign(pixels);
-    color_buffer.assign(colors);
+    particle_buffer.assign(particles);
 
     GlVertexArray vao;
     // 1. set
     vao.setVertexAttribute(0, pixel_buffer, 4, AttributeType::FLOAT, false, 4 * sizeof(float), nullptr);
-    vao.setVertexAttribute(1, color_buffer, 4, AttributeType::FLOAT, false, 4 * sizeof(float), nullptr);
+    vao.setVertexAttribute(1, particle_buffer, 4, AttributeType::FLOAT, false, 4 * sizeof(float), nullptr);
     // 2. enable
     vao.enableVertexAttribute(0);
     vao.enableVertexAttribute(1);
@@ -176,21 +176,21 @@ int main(int argc, char** argv) {
     std::cout << "gpu transform: " << gpu_timer.elapsedMilliseconds() << "ms"<< std::endl;
 
 
-//    // retrieve result
-//    std::vector<vec4> data;
-//    output.download(data);
-//
-//    cv::Mat out_image(height,width, CV_8UC3);
-//    for (int i = 0; i < width* height; i++) {
-//        int x = i % width;
-//        int y = i / width;
-//        out_image.at<cv::Vec3b>(y,x)[0] =   data[i].x ;
-//        out_image.at<cv::Vec3b>(y,x)[1] =   data[i].y ;
-//        out_image.at<cv::Vec3b>(y,x)[2] =   data[i].z ;
-//    }
-//
-//    cv::imshow("out_image", out_image);
-//    cv::waitKey(10000);
+    // retrieve result
+    std::vector<vec4> data;
+    output.download(data);
+
+    cv::Mat out_image(height,width, CV_8UC3);
+    for (int i = 0; i < width* height; i++) {
+        int x = i % width;
+        int y = i / width;
+        out_image.at<cv::Vec3b>(y,x)[0] =   data[i].x ;
+        out_image.at<cv::Vec3b>(y,x)[1] =   data[i].y ;
+        out_image.at<cv::Vec3b>(y,x)[2] =   data[i].z ;
+    }
+
+    cv::imshow("out_image", out_image);
+    cv::waitKey(1000);
 
     return 0;
 }
