@@ -3,20 +3,14 @@
 #include <glow/glutil.h>
 
 #include <glow/GlBuffer.h>
-#include <glow/GlFramebuffer.h>
 #include <glow/GlProgram.h>
 #include <glow/GlVertexArray.h>
-#include <glow/ScopedBinder.h>
 
 #include <algorithm>
 #include <random>
 #include <vector>
-#include <opencv2/opencv.hpp>
-#include <glow/GlSampler.h>
 
-#include <glow/GlCapabilities.h>
 #include <glow/GlState.h>
-#include <glow/util/X11OffscreenContext.h>
 #include <glow/util/GLContext.h>
 
 #include "timer.h"
@@ -84,7 +78,7 @@ int main(int argc, char** argv) {
 
     /// CPU
     cpu_timer.start();
-    //transfrom_cpu(laserMeas, se2_particles);
+    transfrom_cpu(laserMeas, se2_particles);
     cpu_timer.stop();
     std::cout << "cpu transform: " << cpu_timer.elapsedMilliseconds() << "ms"<< std::endl;
 
@@ -116,6 +110,9 @@ int main(int argc, char** argv) {
     input_vec.assign(vec);
     std::cout << "input_vec: " << input_vec.size() << std::endl;
 
+    gpu_timer.start();
+
+
     std::vector<std::string> varyings{
             "result_out",
     };
@@ -128,8 +125,8 @@ int main(int argc, char** argv) {
                                     reinterpret_cast<GLvoid*>(0));
 
 
-    extractProgram.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/particle_se2_transform_feedback.vert"));
-    extractProgram.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/empty.frag"));
+    extractProgram.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/tiny_glow/samples/shader/particle_se2_transform_feedback.vert"));
+    extractProgram.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/tiny_glow/samples/shader/empty.frag"));
     extractProgram.attach(extractFeedback);
     extractProgram.link();
 
@@ -152,14 +149,19 @@ int main(int argc, char** argv) {
 
     extractBuffer.resize(extractedSize);
 
+
     std::vector<vec4> download_input_vec;
     download_input_vec.reserve(10000);
     extractBuffer.get(download_input_vec);
+    gpu_timer.stop();
+
+    std::cout << "gpu transform: " << gpu_timer.elapsedMilliseconds() << "ms"<< std::endl;
+
     std::cout << "download_input_vec: " << download_input_vec.size() << std::endl;
 
-    for (auto i : download_input_vec) {
-        std::cout << i.x << " " << i.y << " " <<  i.z << " " << i.w << std::endl;
-    }
+//    for (auto i : download_input_vec) {
+//        std::cout << i.x << " " << i.y << " " <<  i.z << " " << i.w << std::endl;
+//    }
     
     vao_input_vec.release();
     extractFeedback.release();

@@ -1,5 +1,5 @@
 <package>
-  <name>glow</name>
+  <name>tiny_glow</name>
   <version>0.0.1</version>
   <description>OpenGL Object Wrapper (GLOW)</description>
   <maintainer email="jens.behley@igg.uni-bonn.de">Jens Behley</maintainer>

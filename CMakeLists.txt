@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.2.3)
 
-project(glow)
+project(tiny_glow)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
@@ -46,36 +46,25 @@ add_library(glow
   src/glow/GlVertexArray.cpp
   src/glow/GlUniform.cpp
   src/glow/glutil.cpp
-  src/glow/GlTexture.cpp
-  src/glow/GlTextureRectangle.cpp
-  src/glow/GlFramebuffer.cpp
-  src/glow/GlRenderbuffer.cpp
-  src/glow/GlTransformFeedback.cpp
+        src/glow/GlTransformFeedback.cpp
   src/glow/GlQuery.cpp
-  src/glow/GlSampler.cpp
-  src/glow/GlState.cpp
-  src/glow/GlColor.cpp
-  src/glow/GlShaderCache.cpp
+        src/glow/GlState.cpp
+        src/glow/GlShaderCache.cpp
   src/glow/GlCapabilities.cpp
-  src/glow/GlTextureBuffer.cpp)
+        )
 
 if(X11_FOUND)
   add_library(glow_util
-    src/glow/util/GlCamera.cpp
-    src/glow/util/RoSeCamera.cpp
-    src/glow/util/FpsCamera
-    src/glow/util/RandomColorGenerator.cpp
-    src/glow/util/GLContext.cpp
-    src/glow/util/X11OffscreenContext.cpp)
+          src/glow/util/GLContext.cpp
+        )
 
   target_link_libraries(glow_util EGL GLESv2  ${X11_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
 
 else()
   add_library(glow_util
     src/glow/util/GlCamera.cpp
-    src/glow/util/RoSeCamera.cpp
-    src/glow/util/FpsCamera.cpp
-    src/glow/util/RandomColorGenerator.cpp)
+          src/glow/util/FpsCamera.cpp
+          )
 
   target_link_libraries(glow_util ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
 endif()
