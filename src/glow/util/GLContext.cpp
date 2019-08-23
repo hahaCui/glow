@@ -2,7 +2,7 @@
 #include <assert.h>
 
 //#define GL_BUILD_FOR_ANDROID
-#ifdef GL_BUILD_FOR_ANDROID
+#ifdef __ANDROID__
 #include <EGL/egl.h>
 class GLContext::nativeContext
 {
