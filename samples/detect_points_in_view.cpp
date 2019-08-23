@@ -23,6 +23,8 @@
 #include <glow/GlUniform.h>
 #include <glow/util/X11OffscreenContext.h>
 
+#include "timer.h"
+
 using namespace glow;
 
 
@@ -49,9 +51,14 @@ std::vector<vec3> loadLidarPoints(const std::string& bin_file ) {
 //    std::cout << "Read KTTI point cloud with " << i << " points" << std::endl;
     return points;
 }
+
+struct PointInView {
+    float x,y,z,i;
+    float u,v, isInView;
+};
 int main() {
-    std::string image_file = "/home/pang/disk/dataset/kitti/00/image_0/000000.png";
-    std::string lidarscan_file = "/home/pang/disk/dataset/kitti/00/velodyne/000000.bin";
+    std::string image_file = "/home/pang/data/dataset/kitti/00/image_0/000000.png";
+    std::string lidarscan_file = "/home/pang/data/dataset/kitti/00/velodyne/000000.bin";
 
     cv::Mat image = cv::imread(image_file, CV_LOAD_IMAGE_COLOR);
 //    cv::imshow("image", image);
@@ -86,11 +93,13 @@ int main() {
     glow::X11OffscreenContext ctx(3,3);  // OpenGl context
     glow::inititializeGLEW();
 
+    Timer gpu_timer;
 
+    gpu_timer.start();
     glow::GlBuffer<vec3> input_vec{glow::BufferTarget::ARRAY_BUFFER,
                                    glow::BufferUsage::DYNAMIC_DRAW};  // feedback stores updated input_vec inside input_vec.
 
-    glow::GlBuffer<vec3> extractBuffer{glow::BufferTarget::ARRAY_BUFFER, glow::BufferUsage::DYNAMIC_DRAW};
+    glow::GlBuffer<PointInView> extractBuffer{glow::BufferTarget::ARRAY_BUFFER, glow::BufferUsage::DYNAMIC_DRAW};
     glow::GlProgram extractProgram;
     glow::GlTransformFeedback extractFeedback;
 
@@ -98,7 +107,8 @@ int main() {
     input_vec.assign(lidar_points);
     std::cout << "input_vec: " << input_vec.size() << std::endl;
     std::vector<std::string> varyings{
-            "position_out",
+            "point_in_view_xyz_i",
+            "point_in_view_uv_isInView",
     };
     extractBuffer.reserve(2 * input_vec.size());
     extractFeedback.attach(varyings, extractBuffer);
@@ -137,9 +147,13 @@ int main() {
 
     extractBuffer.resize(extractedSize);
 
-    std::vector<vec3> download_input_vec;
+
+
+    std::vector<PointInView> download_input_vec;
     download_input_vec.reserve(2 * input_vec.size());
     extractBuffer.get(download_input_vec);
+
+
     std::cout << "download_input_vec: " << download_input_vec.size() << std::endl;
 
 //
@@ -150,10 +164,23 @@ int main() {
 //    }
 
 
+    gpu_timer.stop();
+
+
+    int total_in_view_cnt = 0;
     for (auto i : download_input_vec) {
-        std::cout << i.x << " " << i.y << " " << i.z << std::endl;
+
+
+        if(i.isInView) {
+            total_in_view_cnt ++;
+//            std::cout << i.x << " " << i.y << " " << i.z << " " << i.i << " " << i.u << " " << i.v  << " " << i.isInView<< std::endl;
+
+        }
     }
 
+    std::cout << "total_in_view_cnt: " << total_in_view_cnt << std::endl;
+
+    std::cout << "timing: " << gpu_timer.elapsedMilliseconds() << std::endl;
 
 
     return 0;
