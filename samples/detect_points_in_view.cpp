@@ -53,7 +53,8 @@ std::vector<vec3> loadLidarPoints(const std::string& bin_file ) {
 }
 
 struct PointInView {
-    float x,y,z,i;
+    float x,y,z;
+    float r,g,b;
     float u,v, isInView;
 };
 int main() {
@@ -66,8 +67,8 @@ int main() {
     std::vector<vec3> lidar_points = loadLidarPoints(lidarscan_file);
 
 
-    int image_width = image.cols;
-    int image_height = image.rows;
+    uint32_t image_width = image.cols;
+    uint32_t image_height = image.rows;
     std::cout << "lidar_points: " << lidar_points.size() << std::endl;
 //    for (auto i : lidar_points) {
 //        std::cout << i.x << " " << i.y << " " << i.z << std::endl;
@@ -93,6 +94,13 @@ int main() {
     glow::X11OffscreenContext ctx(3,3);  // OpenGl context
     glow::inititializeGLEW();
 
+
+    cv::Mat float_image;
+    image.convertTo(float_image, CV_32FC3);
+
+    GlTexture input_texture{image_width, image_height, TextureFormat::RGBA_FLOAT};
+    input_texture.assign(PixelFormat::RGB, PixelType::FLOAT, float_image.ptr());
+
     Timer gpu_timer;
 
     gpu_timer.start();
@@ -107,7 +115,8 @@ int main() {
     input_vec.assign(lidar_points);
     std::cout << "input_vec: " << input_vec.size() << std::endl;
     std::vector<std::string> varyings{
-            "point_in_view_xyz_i",
+            "point_in_view_xyz",
+            "point_in_view_rgb",
             "point_in_view_uv_isInView",
     };
     extractBuffer.reserve(2 * input_vec.size());
@@ -124,21 +133,27 @@ int main() {
     extractProgram.attach(extractFeedback);
     extractProgram.link();
 
+    extractProgram.setUniform(GlUniform<int32_t>("input_texture", 0));
+
     extractProgram.setUniform(GlUniform<Eigen::Matrix4f>("T_cam_lidar", T_cam_lidar));
     extractProgram.setUniform(GlUniform<vec2>("image_wh", image_wh));
     extractProgram.setUniform(GlUniform<vec4>("intrinsic", intrinsic));
 
 
+    GlSampler sampler;
+    sampler.setMagnifyingOperation(TexMagOp::NEAREST);
+    sampler.setMinifyingOperation(TexMinOp::NEAREST);
 
-    extractFeedback.bind();
-    extractProgram.bind();
 
     glEnable(GL_RASTERIZER_DISCARD);
 
     extractProgram.bind();
+    sampler.bind(0);
+
     extractFeedback.bind();
     vao_input_vec.bind();
-
+    glActiveTexture(GL_TEXTURE0);
+    input_texture.bind();
 
 
     extractFeedback.begin(TransformFeedbackMode::POINTS);
@@ -154,14 +169,20 @@ int main() {
     extractBuffer.get(download_input_vec);
 
 
+    vao_input_vec.release();
+    extractFeedback.release();
+    extractProgram.release();
+
+    sampler.release(0);
+    glActiveTexture(GL_TEXTURE0);
+    input_texture.release();
+
+
+    glDisable(GL_RASTERIZER_DISCARD);
+
+
     std::cout << "download_input_vec: " << download_input_vec.size() << std::endl;
 
-//
-//    for (int i = 0; i < download_input_vec.size(); i ++) {
-//        std::cout << download_input_vec.at(i).x - lidar_points.at(i).x << " "
-//                << download_input_vec.at(i).y - lidar_points.at(i).y << " "
-//                << download_input_vec.at(i).z - lidar_points.at(i).z << std::endl;
-//    }
 
 
     gpu_timer.stop();
@@ -169,11 +190,9 @@ int main() {
 
     int total_in_view_cnt = 0;
     for (auto i : download_input_vec) {
-
-
         if(i.isInView) {
             total_in_view_cnt ++;
-//            std::cout << i.x << " " << i.y << " " << i.z << " " << i.i << " " << i.u << " " << i.v  << " " << i.isInView<< std::endl;
+            std::cout << i.x << " " << i.y << " " << i.z << " " << i.r << " " << i.g << " " << i.b << " " << i.u << " " << i.v  << " " << i.isInView<< std::endl;
 
         }
     }

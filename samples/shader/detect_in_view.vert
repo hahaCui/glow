@@ -2,12 +2,13 @@
 
 layout (location = 0) in vec3 Lp;
 
-
+uniform sampler2D input_texture;
 uniform mat4 T_cam_lidar;
 uniform vec2 image_wh;
 uniform vec4 intrinsic;
 
-out vec4 point_in_view_xyz_i;
+out vec3 point_in_view_xyz;
+out vec3 point_in_view_rgb;
 out vec3 point_in_view_uv_isInView;
 
 void main()
@@ -27,7 +28,11 @@ void main()
         point_in_view_uv_isInView = vec3(u,v,0);
     } else {
         point_in_view_uv_isInView = vec3(u,v,1);
-        point_in_view_xyz_i = vec4(Cp, 0);
+
+        vec2 coords = vec2(u/image_wh.x, v/image_wh.y);
+
+        point_in_view_rgb = texture(input_texture, coords).rgb;;
+        point_in_view_xyz = Cp;
     }
 
 }
