@@ -23,11 +23,13 @@ void main()
     float v = intrinsic.y * Cp.y * inv_z + intrinsic.w;
 
     if ( Cp.z < 0 || u < 0 || u > image_wh.x || v < 0 || v > image_wh.y) {
-//        gl_Position = vec4(0,0,0,1);
-//        texCoords = vec2(0,0);
+        gl_Position = vec4(0,0,0,1);
+        texCoords = vec2(0,0);
         depth = -1;
     } else {
-        gl_Position = vec4(u/image_wh.x, v/image_wh.y, 0, 1);
+        float normal_u = 2.0f * (float(u + 0.5f) / float(image_wh.x)) - 1.0f;
+        float normal_v = 2.0f * (float(v + 0.5f) / float(image_wh.y)) - 1.0f;
+        gl_Position = vec4(normal_u, normal_v, 0, 1);
         texCoords = vec2(u/image_wh.x, v/image_wh.y);
         depth = Cp.z;
     }

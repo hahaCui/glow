@@ -181,7 +181,9 @@ int main() {
     }
 
     cv::imshow("out_image", out_image);
-    cv::waitKey(10000);
+    cv::imshow("image", image);
+
+    cv::waitKey(100000);
 
 
 
