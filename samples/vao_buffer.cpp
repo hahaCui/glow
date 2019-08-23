@@ -50,8 +50,8 @@ int main(int argc, char** argv) {
 
     std::vector<vec4> pixels;
     std::vector<vec4> colors;
-    for (uint32_t i = 0; i < height; ++i) {
-        for (uint32_t j = 0; j < width; ++j) {
+    for (uint32_t i = 0; i < height ; ++i) {
+        for (uint32_t j = 0; j < width ; ++j) {
             vec4 v;
             v.x = 2.0f * (float(j + 0.5f) / float(width)) - 1.0f;
             v.y = 2.0f * (float(i + 0.5f) / float(height)) - 1.0f;
