@@ -55,7 +55,7 @@ std::vector<vec3> loadLidarPoints(const std::string& bin_file ) {
 struct PointInView {
     float x,y,z;
     float r,g,b;
-    float u,v, isInView;
+    float u,v;
 };
 int main() {
     std::string image_file = "/home/pang/disk/dataset/kitti/00/image_0/000000.png";
@@ -117,7 +117,7 @@ int main() {
     std::vector<std::string> varyings{
             "point_in_view_xyz",
             "point_in_view_rgb",
-            "point_in_view_uv_isInView",
+            "point_in_view_uv",
     };
     extractBuffer.reserve(2 * input_vec.size());
     extractFeedback.attach(varyings, extractBuffer);
@@ -129,6 +129,7 @@ int main() {
 
 
     extractProgram.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/detect_in_view.vert"));
+    extractProgram.attach(GlShader::fromFile(ShaderType::GEOMETRY_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/detect_in_view.geom"));
     extractProgram.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/empty.frag"));
     extractProgram.attach(extractFeedback);
     extractProgram.link();
@@ -192,21 +193,22 @@ int main() {
     cv::Mat1b point_image(image_height, image_width, CV_8UC1);
     point_image.setTo(0);
     for (auto i : download_input_vec) {
-        if(i.isInView) {
+
             total_in_view_cnt ++;
-            std::cout << i.x << " " << i.y << " " << i.z << " " << i.r << " " << i.g << " " << i.b << " " << i.u << " " << i.v  << " " << i.isInView<< std::endl;
+            std::cout << i.x << " " << i.y << " " << i.z << " " << i.r << " " << i.g << " " << i.b << " " << i.u << " " << i.v  << std::endl;
 
             point_image.at<uchar>(i.v, i.u)= i.r;
 
-        }
     }
 
     std::cout << "total_in_view_cnt: " << total_in_view_cnt << std::endl;
 
     std::cout << "timing: " << gpu_timer.elapsedMilliseconds() << std::endl;
+//    imwrite( "/home/pang/Gray_Image.jpg", point_image );
 
     cv::imshow("point_image", point_image);
-    cv::waitKey(20000);
+
+    cv::waitKey(2000000);
 
     return 0;
 }
