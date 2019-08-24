@@ -194,10 +194,10 @@ class GlBuffer : public GlObject {
   void release() override;
 
   /** \brief copy all content to other buffer starting at given offset **/
-  void copyTo(GlBuffer<T>& other, uint32_t other_offset = 0);
+  void copyTo(GlBuffer<T>& other, uint32_t other_offset = 0) const ;
 
   /** \brief copy content from [offset, offset+size] into other buffer [other_offset, other_offset+size] **/
-  void copyTo(uint32_t offset, uint32_t size, GlBuffer<T>& other, uint32_t other_offset);
+  void copyTo(uint32_t offset, uint32_t size, GlBuffer<T>& other, uint32_t other_offset) const ;
 
   /** \brief get memory usage of buffer in bytes. **/
   uint32_t memorySize() const { return capacity_ * dataSize_; }
@@ -402,12 +402,12 @@ void GlBuffer<T>::releaseTransparently(GLuint old_buffer) const {
 }
 
 template <class T>
-void GlBuffer<T>::copyTo(GlBuffer<T>& other, uint32_t other_offset) {
+void GlBuffer<T>::copyTo(GlBuffer<T>& other, uint32_t other_offset) const {
   copyTo(0, size_, other, other_offset);
 }
 
 template <class T>
-void GlBuffer<T>::copyTo(uint32_t offset, uint32_t size, GlBuffer<T>& other, uint32_t other_offset) {
+void GlBuffer<T>::copyTo(uint32_t offset, uint32_t size, GlBuffer<T>& other, uint32_t other_offset) const {
   glBindBuffer(GL_COPY_READ_BUFFER, id_);
   glBindBuffer(GL_COPY_WRITE_BUFFER, other.id());
 
