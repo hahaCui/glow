@@ -126,6 +126,7 @@ int main() {
     // now we can set the vertex attributes. (the "shallow copy" of input_vec now contains the correct id.
     vao_input_vec.setVertexAttribute(0, input_vec, 3, AttributeType::FLOAT, false, sizeof(vec3),
                                      reinterpret_cast<GLvoid*>(0));
+    vao_input_vec.enableVertexAttribute(0);
 
 
     extractProgram.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/detect_in_view.vert"));
