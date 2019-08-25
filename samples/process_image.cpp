@@ -55,7 +55,8 @@ int main(int argc, char** argv) {
     float convolution_radius = 5;
     _CheckGlError(__FILE__, __LINE__);
     //  std::cout << "On entry: " << GlState::queryAll() << std::endl;
-    std::string image_file = "/home/pang/000000_10.png";
+    std::string image_file = "/home/pang/disk/dataset/kitti/00/image_0/000000.png";
+
     cv::Mat image = cv::imread(image_file, CV_LOAD_IMAGE_COLOR);
     uint32_t width = image.cols, height = image.rows;
 

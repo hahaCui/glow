@@ -57,6 +57,53 @@ struct PointInView {
     float r,g,b;
     float u,v;
 };
+
+inline void bilinearWeights(float x, float y, float* w00, float* w01,
+                            float* w10, float* w11) {
+    int x_floor = static_cast<int>(x);
+    int y_floor = static_cast<int>(y);
+
+    float dx = x - x_floor;
+    float dy = y - y_floor;
+
+    /* Compute rectangles using only 1 multiply (taken from LSD-SLAM). */
+    *w11 = dx * dy;
+    *w01 = dx - *w11;
+    *w10 = dy - *w11;
+    *w00 = 1.0f - dx - dy + *w11;
+
+    return;
+}
+
+
+template <typename ChannelType, typename RetType>
+inline RetType bilinearInterp(uint32_t rows, uint32_t cols, std::size_t step,
+                              const void* data, float x, float y) {
+
+
+    int x_floor = static_cast<int>(x);
+    int y_floor = static_cast<int>(y);
+
+    float w00, w01, w10, w11;
+    bilinearWeights(x, y, &w00, &w01, &w10, &w11);
+
+    const uint8_t* datab =
+            &(static_cast<const uint8_t*>(data))[y_floor * step + x_floor * sizeof(ChannelType)];
+
+    return w00 * (*reinterpret_cast<const ChannelType*>(datab)) +
+           w01 * (*reinterpret_cast<const ChannelType*>(datab + sizeof(ChannelType))) +
+           w10 * (*reinterpret_cast<const ChannelType*>(datab + step)) +
+           w11 * (*reinterpret_cast<const ChannelType*>(datab + sizeof(ChannelType) + step));
+}
+
+
+
+template <typename ChannelType, typename RetType>
+inline RetType bilinearInterp(const cv::Mat& img, float x, float y) {
+    return bilinearInterp<ChannelType, RetType>(img.rows, img.cols, img.step,
+                                                img.data, x, y);
+}
+
 int main() {
     std::string image_file = "/home/pang/disk/dataset/kitti/00/image_0/000000.png";
     std::string lidarscan_file = "/home/pang/disk/dataset/kitti/00/velodyne/000000.bin";
@@ -144,7 +191,7 @@ int main() {
 
     GlSampler sampler;
     sampler.setMagnifyingOperation(TexMagOp::NEAREST);
-    sampler.setMinifyingOperation(TexMinOp::NEAREST);
+    sampler.setMinifyingOperation(TexMinOp::NEAREST); //
 
 
     glEnable(GL_RASTERIZER_DISCARD);
@@ -193,13 +240,18 @@ int main() {
     int total_in_view_cnt = 0;
     cv::Mat1b point_image(image_height, image_width, CV_8UC1);
     point_image.setTo(0);
+    cv::Mat image_gray;
+    cv::cvtColor(image, image_gray, CV_RGB2GRAY);
     for (auto i : download_input_vec) {
 
-            total_in_view_cnt ++;
-            std::cout << i.x << " " << i.y << " " << i.z << " " << i.r << " " << i.g << " " << i.b << " " << i.u << " " << i.v  << std::endl;
+        total_in_view_cnt ++;
+//        std::cout << i.x << " " << i.y << " " << i.z << " " << i.r << " " << i.g << " " << i.b << " " << i.u << " " << i.v  << std::endl;
 
-            point_image.at<uchar>(i.v, i.u)= i.r;
+        point_image.at<uchar>(i.v, i.u)= i.r;
 
+        int intensity = image_gray.at<uchar>(i.v, i.u);
+//        auto intensity = bilinearInterp<uchar, float>(image_gray, i.u, i.v);
+        std::cout << i.r << " " << intensity << std::endl;
     }
 
     std::cout << "total_in_view_cnt: " << total_in_view_cnt << std::endl;
