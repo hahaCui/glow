@@ -31,15 +31,10 @@ void main()
     float v = intrinsic.y * Cp.y * inv_z + intrinsic.w;
 
     if ( Cp.z < 0 || u < 0 || u > image_wh.x || v < 0 || v > image_wh.y) {
-//        point_in_view_uv_isInView = vec3(u,v,0);
         vs_out.valid = false;
     } else {
-//        point_in_view_uv_isInView = vec3(u,v,1);
-//
+        // todo: bi-interpolatation
         vec2 coords = vec2(u/image_wh.x, v/image_wh.y);
-//
-//        point_in_view_rgb = texture(input_texture, coords).rgb;
-//        point_in_view_xyz = Cp;
         vs_out.valid = true;
         vs_out.rgb = texture(input_texture, coords).rgb;
         vs_out.xyz = Cp;
