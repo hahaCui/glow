@@ -249,8 +249,8 @@ int main() {
 
         point_image.at<uchar>(i.v, i.u)= i.r;
 
-        int intensity = image_gray.at<uchar>(i.v, i.u);
-//        auto intensity = bilinearInterp<uchar, float>(image_gray, i.u, i.v);
+//        int intensity = image_gray.at<uchar>(i.v, i.u);
+        auto intensity = bilinearInterp<uchar, float>(image_gray, i.u, i.v);
         std::cout << i.r << " " << intensity << std::endl;
     }
 
