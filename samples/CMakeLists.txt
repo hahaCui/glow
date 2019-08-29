@@ -42,3 +42,8 @@ add_executable(detect_points_in_view_frame_buffer detect_points_in_view_frame_bu
 target_link_libraries(detect_points_in_view_frame_buffer ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
 
 
+
+add_executable(detect_points_in_view_tf_fbo detect_points_in_view_tf_fbo.cpp)
+target_link_libraries(detect_points_in_view_tf_fbo ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
+
+
