@@ -28,17 +28,29 @@ int main(int argc, char** argv) {
 
     //  std::cout << "On entry: " << GlState::queryAll() << std::endl;
     uint32_t width = 640, height = 480;
-    GlFramebuffer fbo(width, height);
+//    GlFramebuffer fbo(width, height);
+    GLuint FramebufferName = 0;
+    glGenFramebuffers(1, &FramebufferName);
+    glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
 
 //    ASSERT_NO_THROW(_CheckGlError(__FILE__, __LINE__));
 
-    GlTexture output{width, height, TextureFormat::RGBA_FLOAT};
+    GlTexture output0{width, height, TextureFormat::RGBA_FLOAT};
+    GlTexture output1{width, height, TextureFormat::RGBA_FLOAT};
     GlRenderbuffer rbo(width, height, RenderbufferFormat::DEPTH_STENCIL);
 
-    fbo.attach(FramebufferAttachment::COLOR0, output);
-    CheckGlError();
-    fbo.attach(FramebufferAttachment::DEPTH_STENCIL, rbo);
-    CheckGlError();
+//    fbo.attach(FramebufferAttachment::COLOR0, output);
+//    CheckGlError();
+//    fbo.attach(FramebufferAttachment::DEPTH_STENCIL, rbo);
+//    CheckGlError();
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo.id());
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, output0.id(), 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, output1.id(), 0);
+
+    // Set the list of draw buffers.
+    GLenum DrawBuffers[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    glDrawBuffers(2, DrawBuffers); // "1" is the size of DrawBuffers
+
 
     GlProgram program;
     program.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/ndc.vert"));
@@ -80,7 +92,8 @@ int main(int argc, char** argv) {
 
     glDisable(GL_DEPTH_TEST);
 
-    fbo.bind();
+//    fbo.bind();
+    glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     glViewport(0, 0, width, height);
     program.bind();
@@ -90,25 +103,33 @@ int main(int argc, char** argv) {
 
     vao.release();
     program.release();
-    fbo.release();
+//    fbo.release();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glEnable(GL_DEPTH_TEST);
 
 
     // retrieve result
-    std::vector<vec4> data;
-    output.download(data);
+    std::vector<vec4> data0, data1;
+    output0.download(data0);
+    output1.download(data1);
 
-    cv::Mat out_image(height,width, CV_8UC3);
+    cv::Mat out_image0(height,width, CV_8UC3);
+    cv::Mat out_image1(height,width, CV_8UC3);
     for (int i = 0; i < width* height; i++) {
         int x = i % width;
         int y = i / width;
-        out_image.at<cv::Vec3b>(y,x)[0] =   data[i].x ;
-        out_image.at<cv::Vec3b>(y,x)[1] =   data[i].y ;
-        out_image.at<cv::Vec3b>(y,x)[2] =   data[i].z ;
+        out_image0.at<cv::Vec3b>(y,x)[0] =   data0[i].x ;
+        out_image0.at<cv::Vec3b>(y,x)[1] =   data0[i].y ;
+        out_image0.at<cv::Vec3b>(y,x)[2] =   data0[i].z ;
+
+        out_image1.at<cv::Vec3b>(y,x)[0] =   data1[i].x ;
+        out_image1.at<cv::Vec3b>(y,x)[1] =   data1[i].y ;
+        out_image1.at<cv::Vec3b>(y,x)[2] =   data1[i].z ;
     }
 
-    cv::imshow("out_image", out_image);
+    cv::imshow("out_image0", out_image0);
+    cv::imshow("out_image1", out_image1);
     cv::waitKey(10000);
 
     return 0;

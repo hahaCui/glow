@@ -1,9 +1,13 @@
 #version 330 core
 
+layout(location = 0) out vec4 Frag0;
+layout(location = 1) out vec4 Frag1;
+
 in vec4 coords;
-out vec4 color; 
+//out vec4 color;
 
 void main()
 {
-  color = coords;
+  Frag0 = coords;
+  Frag1 = vec4(1 -coords.x, 1- coords.y, coords.zw) ;
 }
