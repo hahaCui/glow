@@ -28,7 +28,7 @@ void main()
     float v = intrinsic.y * Cp.y * inv_z + intrinsic.w;
 
     if ( Cp.z < 0 || u < 0 || u > image_wh.x || v < 0 || v > image_wh.y) {
-        gl_Position = vec4(0,0,0,1);
+//        gl_Position = vec4(0,0,0,1);
         vec2 texCoords = vec2(0,0);
         tex_color = vec4(0,0,0,1);
 
@@ -38,14 +38,14 @@ void main()
 
 
     } else {
-        float normal_u = 2.0f * (float(u + 0.5f) / float(image_wh.x)) - 1.0f;
-        float normal_v = 2.0f * (float(v + 0.5f) / float(image_wh.y)) - 1.0f;
+        float normal_u = 2.0f * (float(u ) / float(image_wh.x)) - 1.0f;
+        float normal_v = 2.0f * (float(v ) / float(image_wh.y)) - 1.0f;
         gl_Position = vec4(normal_u, normal_v, 0, 1);
         vec2 texCoords = vec2(u/image_wh.x, v/image_wh.y);
 
         tex_color = vec4(texture(input_texture, texCoords).rgb, 1);
 
-        point_in_view_xyz = Cp;
+        point_in_view_xyz = vec3(normal_u, normal_v, 1);
         point_in_view_rgb = tex_color.rgb;
         point_in_view_uv_in_view = vec3(u,v,1);
 

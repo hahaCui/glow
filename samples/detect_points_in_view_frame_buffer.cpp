@@ -211,9 +211,12 @@ int main() {
     cv::cvtColor(image, image_gray, CV_RGB2GRAY);
     for (auto i : download_input_vec) {
 
-        if (!i.isInView) continue;
+        if (i.isInView < 0.0) continue;
         total_in_view_cnt ++;
         point_image.at<uchar>(i.v, i.u)= i.r;
+
+        std::cout << i.u << " " << i.v << " "
+                  << i.x << " " << i.y << std::endl;
 
     }
 
