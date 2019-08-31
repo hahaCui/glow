@@ -5,14 +5,17 @@ layout (location = 0) in vec3 Lp;
 uniform sampler2D input_texture;
 
 uniform mat4 T_cam_lidar;
-uniform vec2 image_wh;
+uniform vec2 wh;
 uniform vec4 intrinsic;
 
-out vec4 tex_color;
-
-out vec3 point_in_view_xyz;
-out vec3 point_in_view_rgb;
-out vec3 point_in_view_uv_in_view;
+out Element
+{
+    bool valid;
+    vec4 position;
+    vec4 rgb;
+    vec3 xyz;
+    vec2 uv;
+} vs_out;
 
 void main()
 {
@@ -27,27 +30,21 @@ void main()
     float u = intrinsic.x * Cp.x * inv_z + intrinsic.z;
     float v = intrinsic.y * Cp.y * inv_z + intrinsic.w;
 
-    if ( Cp.z < 0 || u < 0 || u > image_wh.x || v < 0 || v > image_wh.y) {
-//        gl_Position = vec4(0,0,0,1);
-        vec2 texCoords = vec2(0,0);
-        tex_color = vec4(0,0,0,1);
-
-        point_in_view_xyz = Cp;
-        point_in_view_rgb = vec3(0,0,0);
-        point_in_view_uv_in_view = vec3(0,0,-1);
+    if ( Cp.z < 0 || u < 0 || u > wh.x || v < 0 || v > wh.y) {
+        vs_out.valid = false;
 
 
     } else {
-        float normal_u = 2.0f * (float(u ) / float(image_wh.x)) - 1.0f;
-        float normal_v = 2.0f * (float(v ) / float(image_wh.y)) - 1.0f;
-        gl_Position = vec4(normal_u, normal_v, 0, 1);
-        vec2 texCoords = vec2(u/image_wh.x, v/image_wh.y);
+        vs_out.valid = true;
 
-        tex_color = vec4(texture(input_texture, texCoords).rgb, 1);
+        vec2 normal_coords = vec2(2.0f * (float(u + 0.5f) / float(wh.x)) - 1.0f,
+        2.0f * (float(v + 0.5f) / float(wh.y)) - 1.0f);
+        vs_out.position = vec4(normal_coords, 0, 1.0);
+        vec2 tex_coords = vec2(u/float(wh.x), (float(v) / float(wh.y)));
+        vs_out.rgb = texture(input_texture, tex_coords);
 
-        point_in_view_xyz = vec3(normal_u, normal_v, 1);
-        point_in_view_rgb = tex_color.rgb;
-        point_in_view_uv_in_view = vec3(u,v,1);
+        vs_out.xyz = Cp;
+        vs_out.uv = vec2(u,v);
 
 
     }
