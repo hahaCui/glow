@@ -4,7 +4,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 
 
-find_package(OpenCV 3.3 REQUIRED)
+find_package(OpenCV 3.3.0 REQUIRED)
 message(STATUS "Found GLFW3 in ${GLFW3_INCLUDE_DIR}")
 include_directories(${OpenCV_INCLUDE_DIRS} )
 
