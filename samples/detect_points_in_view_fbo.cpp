@@ -111,6 +111,9 @@ int main(int argc, char** argv) {
     program.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/detect_in_view_fbo.frag"));
     program.link();
 
+    vec2 wh(width, height);
+    program.setUniform(GlUniform<vec2>("wh", wh));
+
     GlBuffer<vec4> pixel_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
     GlBuffer<vec4> color_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
 
@@ -119,8 +122,8 @@ int main(int argc, char** argv) {
     for (uint32_t i = 0; i < height ; ++i) {
         for (uint32_t j = 0; j < width ; ++j) {
             vec4 v;
-            v.x = 2.0f * (float(j + 0.5f) / float(width)) - 1.0f;
-            v.y = 2.0f * (float(i + 0.5f) / float(height)) - 1.0f;
+            v.x = j;
+            v.y = i;
             v.z = 0;
             v.w = 0;
             pixels.push_back(v);
