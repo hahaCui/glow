@@ -230,37 +230,24 @@ int main(int argc, char** argv) {
     program.link();
 
     vec2 wh(width, height);
+    program.setUniform(GlUniform<Eigen::Matrix4f>("T_cam_lidar", T_cam_lidar));
     program.setUniform(GlUniform<vec2>("wh", wh));
+    program.setUniform(GlUniform<vec4>("intrinsic", intrinsic));
+
     program.setUniform(GlUniform<int32_t>("input_texture", 0));
 
 
-    GlBuffer<vec4> pixel_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
+    GlBuffer<vec4> point_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
 
     std::vector<vec4> pixels;
-//    for (uint32_t i = 0; i < height ; ++i) {
-//        for (uint32_t j = 0; j < width ; ++j) {
-//            vec4 v;
-//            v.x = j;
-//            v.y = i;
-//            v.z = 0;
-//            v.w = 0;
-//            pixels.push_back(v);
-//
-//            v.x = (float)image.at<cv::Vec3b>(i,j)[0];
-//            v.y = (float)image.at<cv::Vec3b>(i,j)[1];
-//            v.z = (float)image.at<cv::Vec3b>(i,j)[2];
-//            v.w = 0;
-//            colors.push_back(v);
-//        }
-//    }
+
 
     for (int i = 0; i < in_view_cloud.size(); i++) {
-
             vec4 v;
-            v.x = uv_with_depth.at(i)(0);
-            v.y = uv_with_depth.at(i)(1);
-            v.z = 0;
-            v.w = 0;
+        v.x =  uv_with_depth.at(i)(0);
+        v.y =  uv_with_depth.at(i)(1);
+        v.z = 0;
+        v.w = 0;
         pixels.push_back(v);
 
         v.x = 3000 + uv_with_depth.at(i)(0);
@@ -270,11 +257,11 @@ int main(int argc, char** argv) {
             pixels.push_back(v);
     }
 
-    pixel_buffer.assign(pixels);
+    point_buffer.assign(pixels);
 
     GlVertexArray vao;
     // 1. set
-    vao.setVertexAttribute(0, pixel_buffer, 4, AttributeType::FLOAT, false, 4 * sizeof(float), nullptr);
+    vao.setVertexAttribute(0, point_buffer, 4, AttributeType::FLOAT, false, 4 * sizeof(float), nullptr);
     // 2. enable
     vao.enableVertexAttribute(0);
 
@@ -294,7 +281,7 @@ int main(int argc, char** argv) {
     glActiveTexture(GL_TEXTURE0);
     input_texture.bind();
 
-    glDrawArrays(GL_POINTS, 0, pixel_buffer.size());
+    glDrawArrays(GL_POINTS, 0, point_buffer.size());
 
     vao.release();
     program.release();
