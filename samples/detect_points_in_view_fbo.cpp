@@ -193,9 +193,7 @@ int main(int argc, char** argv) {
     glow::inititializeGLEW();
 
     //  std::cout << "On entry: " << GlState::queryAll() << std::endl;
-    GLuint FramebufferName = 0;
-    glGenFramebuffers(1, &FramebufferName);
-    glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+
 
 //    ASSERT_NO_THROW(_CheckGlError(__FILE__, __LINE__));
 
@@ -208,20 +206,13 @@ int main(int argc, char** argv) {
 
 
     GlTexture output0{width, height, TextureFormat::RGBA_FLOAT};
-    GlTexture output1{width, height, TextureFormat::RGBA_FLOAT};
     GlRenderbuffer rbo(width, height, RenderbufferFormat::DEPTH_STENCIL);
 
-//    fbo.attach(FramebufferAttachment::COLOR0, output);
-//    CheckGlError();
-//    fbo.attach(FramebufferAttachment::DEPTH_STENCIL, rbo);
-//    CheckGlError();
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo.id());
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, output0.id(), 0);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, output1.id(), 0);
-
-    // Set the list of draw buffers.
-    GLenum DrawBuffers[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(2, DrawBuffers); // "1" is the size of DrawBuffers
+    GlFramebuffer fbo(width, height);
+    fbo.attach(FramebufferAttachment::COLOR0, output0);
+    CheckGlError();
+    fbo.attach(FramebufferAttachment::DEPTH_STENCIL, rbo);
+    CheckGlError();
 
 
     GlProgram program;
@@ -240,27 +231,7 @@ int main(int argc, char** argv) {
 
     GlBuffer<vec4> point_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
 
-//    std::vector<vec4> pixels;
 
-
-//    for (int i = 0; i < in_view_cloud.size(); i++) {
-//        vec4 v;
-//        v.x =  in_view_cloud.at(i).x;
-//        v.y =  in_view_cloud.at(i).y;
-//        v.z =  in_view_cloud.at(i).z;
-//        v.w = 0;
-//        pixels.push_back(v);
-//
-//
-//        v.x =  in_view_cloud.at(i).x;
-//        v.y =  in_view_cloud.at(i).y;
-//        v.z =  - in_view_cloud.at(i).z;
-//        v.w = 0;
-//        pixels.push_back(v);
-//
-//
-//
-//    }
 
     point_buffer.assign(lidar_points);
 
@@ -277,8 +248,7 @@ int main(int argc, char** argv) {
     glDisable(GL_DEPTH_TEST);
 
     sampler.bind(0);
-//    fbo.bind();
-    glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+    fbo.bind();
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     glViewport(0, 0, width, height);
     program.bind();
@@ -290,8 +260,7 @@ int main(int argc, char** argv) {
 
     vao.release();
     program.release();
-//    fbo.release();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    fbo.release();
 
     sampler.release(0);
 
@@ -302,12 +271,10 @@ int main(int argc, char** argv) {
 
 
     // retrieve result
-    std::vector<vec4> data0, data1;
+    std::vector<vec4> data0;
     output0.download(data0);
-    output1.download(data1);
 
     cv::Mat out_image0(height,width, CV_8UC1);
-    cv::Mat out_image1(height,width, CV_8UC1);
     for (int i = 0; i < width* height; i++) {
         int x = i % width;
         int y = i / width;
@@ -315,14 +282,11 @@ int main(int argc, char** argv) {
 //        out_image0.at<cv::Vec3b>(y,x)[1] =   data0[i].y ;
 //        out_image0.at<cv::Vec3b>(y,x)[2] =   data0[i].z ;
 
-        out_image1.at<uchar>(y,x) =   data1[i].x ;
-//        out_image1.at<cv::Vec3b>(y,x)[1] =   data1[i].y ;
-//        out_image1.at<cv::Vec3b>(y,x)[2] =   data1[i].z ;
+
     }
 
     cv::imshow("image", image);
     cv::imshow("out_image0", out_image0);
-    cv::imshow("out_image1", out_image1);
     cv::waitKey(100000);
 
     return 0;
