@@ -128,9 +128,23 @@ int main() {
     fbo.attach(FramebufferAttachment::DEPTH_STENCIL, rbo);
     CheckGlError();
 
+    glow::GlBuffer<PointInView> extractBuffer{glow::BufferTarget::ARRAY_BUFFER, glow::BufferUsage::DYNAMIC_DRAW};
+    glow::GlTransformFeedback extractFeedback;
+
+    std::cout << "input_vec: " << input_vec.size() << std::endl;
+    std::vector<std::string> varyings{
+            "point_in_view_xyz",
+            "point_in_view_rgb",
+            "point_in_view_uv_in_view",
+    };
+    extractBuffer.reserve(2 * input_vec.size());
+    extractFeedback.attach(varyings, extractBuffer);
+
+
     glow::GlProgram extractProgram;
     extractProgram.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/detect_in_view_frame_buffer.vert"));
     extractProgram.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/detect_in_view_frame_buffer.frag"));
+    extractProgram.attach(extractFeedback);
     extractProgram.link();
 
     extractProgram.setUniform(GlUniform<int32_t>("input_texture", 0));
@@ -149,13 +163,23 @@ int main() {
     extractProgram.bind();
     fbo.bind();
     sampler.bind(0);
+    extractFeedback.bind();
 
     vao_input_vec.bind();
     glActiveTexture(GL_TEXTURE0);
     input_texture.bind();
 
 
+    extractFeedback.begin(TransformFeedbackMode::POINTS);
     glDrawArrays(GL_POINTS, 0, input_vec.size());
+    uint32_t extractedSize = extractFeedback.end();
+    extractBuffer.resize(extractedSize);
+
+
+
+    std::vector<PointInView> download_input_vec;
+    download_input_vec.reserve(2 * input_vec.size());
+    extractBuffer.get(download_input_vec);
 
     vao_input_vec.release();
     extractProgram.release();
@@ -179,6 +203,23 @@ int main() {
         out_image.at<cv::Vec3b>(y,x)[1] =   data[i].y ;
         out_image.at<cv::Vec3b>(y,x)[2] =   data[i].z ;
     }
+
+    int total_in_view_cnt = 0;
+    cv::Mat1b point_image(image_height, image_width, CV_8UC1);
+    point_image.setTo(0);
+    cv::Mat image_gray;
+    cv::cvtColor(image, image_gray, CV_RGB2GRAY);
+    for (auto i : download_input_vec) {
+
+        if (!i.isInView) continue;
+        total_in_view_cnt ++;
+        point_image.at<uchar>(i.v, i.u)= i.r;
+
+    }
+
+    std::cout << "total_in_view_cnt: " << total_in_view_cnt << std::endl;
+
+    cv::imshow("point_image", point_image);
 
     cv::imshow("out_image", out_image);
     cv::imshow("image", image);
