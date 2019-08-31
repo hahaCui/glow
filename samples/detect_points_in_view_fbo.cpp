@@ -23,7 +23,7 @@ using namespace glow;
 
 
 
-std::vector<vec3> loadLidarPoints(const std::string& bin_file ) {
+std::vector<vec4> loadLidarPoints(const std::string& bin_file ) {
     // load point cloud
     std::fstream input(bin_file, std::ios::in | std::ios::binary);
     if(!input.good()){
@@ -32,14 +32,15 @@ std::vector<vec3> loadLidarPoints(const std::string& bin_file ) {
     }
     input.seekg(0, std::ios::beg);
 
-    std::vector<vec3> points;
+    std::vector<vec4> points;
 
     int i;
     for (i=0; input.good() && !input.eof(); i++) {
-        vec3 pt;
+        vec4 pt;
         float intensity;
         input.read((char *) &pt.x, 3*sizeof(float));
         input.read((char *) &intensity, sizeof(float));
+        pt.w = 1.0;
         points.push_back(pt);
     }
     input.close();
@@ -96,7 +97,7 @@ inline RetType bilinearInterp(const cv::Mat& img, float x, float y) {
 }
 
 
-inline int getPointsInCameraView(const std::vector<vec3>& cloud,
+inline int getPointsInCameraView(const std::vector<vec4>& cloud,
                                  const cv::Mat& image,
                                  const Eigen::Matrix4d& T_cam_lidar,
                                  const Eigen::Matrix<double,3,4>& camera_intrinsic,
@@ -148,7 +149,7 @@ int main(int argc, char** argv) {
     cv::Mat image = cv::imread(image_file, CV_LOAD_IMAGE_COLOR);
 //    cv::imshow("image", image);
 //    cv::waitKey(3000);
-    std::vector<vec3> lidar_points = loadLidarPoints(lidarscan_file);
+    std::vector<vec4> lidar_points = loadLidarPoints(lidarscan_file);
     Eigen::Matrix4f T_cam_lidar;
     T_cam_lidar <<4.276802385584e-04, -9.999672484946e-01, -8.084491683471e-03, -1.198459927713e-02,
             -7.210626507497e-03, 8.081198471645e-03, -9.999413164504e-01, -5.403984729748e-02,
@@ -239,29 +240,29 @@ int main(int argc, char** argv) {
 
     GlBuffer<vec4> point_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
 
-    std::vector<vec4> pixels;
+//    std::vector<vec4> pixels;
 
 
-    for (int i = 0; i < in_view_cloud.size(); i++) {
-        vec4 v;
-        v.x =  in_view_cloud.at(i).x;
-        v.y =  in_view_cloud.at(i).y;
-        v.z =  in_view_cloud.at(i).z;
-        v.w = 0;
-        pixels.push_back(v);
+//    for (int i = 0; i < in_view_cloud.size(); i++) {
+//        vec4 v;
+//        v.x =  in_view_cloud.at(i).x;
+//        v.y =  in_view_cloud.at(i).y;
+//        v.z =  in_view_cloud.at(i).z;
+//        v.w = 0;
+//        pixels.push_back(v);
+//
+//
+//        v.x =  in_view_cloud.at(i).x;
+//        v.y =  in_view_cloud.at(i).y;
+//        v.z =  - in_view_cloud.at(i).z;
+//        v.w = 0;
+//        pixels.push_back(v);
+//
+//
+//
+//    }
 
-
-        v.x =  in_view_cloud.at(i).x;
-        v.y =  in_view_cloud.at(i).y;
-        v.z =  - in_view_cloud.at(i).z;
-        v.w = 0;
-        pixels.push_back(v);
-
-
-
-    }
-
-    point_buffer.assign(pixels);
+    point_buffer.assign(lidar_points);
 
     GlVertexArray vao;
     // 1. set

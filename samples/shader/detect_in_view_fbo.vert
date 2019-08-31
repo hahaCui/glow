@@ -22,8 +22,9 @@ void main()
 
 //  float u = position.x;
 //  float v = position.y;
+  vec4 Cp_homo = T_cam_lidar * vec4(position.xyz,1.0);
 
-  vec3 Cp = position.xyz;
+  vec3 Cp = Cp_homo.xyz;
 
   //    position_out = Cp;
 
