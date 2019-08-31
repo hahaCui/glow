@@ -212,9 +212,6 @@ int main() {
     sampler.setMagnifyingOperation(TexMagOp::NEAREST);
     sampler.setMinifyingOperation(TexMinOp::NEAREST); //
 
-
-    glEnable(GL_RASTERIZER_DISCARD);
-
     extractProgram.bind();
     fbo.bind();
 
@@ -248,16 +245,9 @@ int main() {
     glActiveTexture(GL_TEXTURE0);
     input_texture.release();
 
-
-    glDisable(GL_RASTERIZER_DISCARD);
-
-
     std::cout << "download_input_vec: " << download_input_vec.size() << std::endl;
 
-
-
     gpu_timer.stop();
-
 
     int total_in_view_cnt = 0;
     cv::Mat1b point_image(image_height, image_width, CV_8UC1);
