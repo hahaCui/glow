@@ -225,6 +225,7 @@ int main(int argc, char** argv) {
 
     GlProgram program;
     program.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/detect_in_view_fbo.vert"));
+    program.attach(GlShader::fromFile(ShaderType::GEOMETRY_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/detect_in_view_fbo.geom"));
     program.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/detect_in_view_fbo.frag"));
     program.link();
 
@@ -260,6 +261,11 @@ int main(int argc, char** argv) {
             v.y = uv_with_depth.at(i)(1);
             v.z = 0;
             v.w = 0;
+
+        v.x = 3000 + uv_with_depth.at(i)(0);
+        v.y =  uv_with_depth.at(i)(1);
+        v.z = 0;
+        v.w = 0;
             pixels.push_back(v);
     }
 
