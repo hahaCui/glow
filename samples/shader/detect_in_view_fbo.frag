@@ -8,6 +8,6 @@ in vec4 coords;
 
 void main()
 {
-  Frag0 = coords;
-  Frag1 = vec4(255 - coords.x, coords.yzw) ;
+  Frag0 = vec4(coords.x,0,0,0);
+  Frag1 = vec4(coords.x, 0,0,0) ;
 }
