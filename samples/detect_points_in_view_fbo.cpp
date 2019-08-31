@@ -198,6 +198,14 @@ int main(int argc, char** argv) {
 
 //    ASSERT_NO_THROW(_CheckGlError(__FILE__, __LINE__));
 
+
+    cv::Mat float_image;
+    image.convertTo(float_image, CV_32FC3);
+
+    GlTexture input_texture{width, height, TextureFormat::RGBA_FLOAT};
+    input_texture.assign(PixelFormat::RGB, PixelType::FLOAT, float_image.ptr());
+
+
     GlTexture output0{width, height, TextureFormat::RGBA_FLOAT};
     GlTexture output1{width, height, TextureFormat::RGBA_FLOAT};
     GlRenderbuffer rbo(width, height, RenderbufferFormat::DEPTH_STENCIL);
@@ -222,12 +230,12 @@ int main(int argc, char** argv) {
 
     vec2 wh(width, height);
     program.setUniform(GlUniform<vec2>("wh", wh));
+    program.setUniform(GlUniform<int32_t>("input_texture", 0));
+
 
     GlBuffer<vec4> pixel_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
-    GlBuffer<vec4> color_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
 
     std::vector<vec4> pixels;
-    std::vector<vec4> colors;
 //    for (uint32_t i = 0; i < height ; ++i) {
 //        for (uint32_t j = 0; j < width ; ++j) {
 //            vec4 v;
@@ -253,33 +261,31 @@ int main(int argc, char** argv) {
             v.z = 0;
             v.w = 0;
             pixels.push_back(v);
-
-            v.x = in_view_cloud.at(i).w;
-            v.y = 0;
-            v.z = 0;
-            v.w = 0;
-            colors.push_back(v);
     }
 
     pixel_buffer.assign(pixels);
-    color_buffer.assign(colors);
 
     GlVertexArray vao;
     // 1. set
     vao.setVertexAttribute(0, pixel_buffer, 4, AttributeType::FLOAT, false, 4 * sizeof(float), nullptr);
-    vao.setVertexAttribute(1, color_buffer, 4, AttributeType::FLOAT, false, 4 * sizeof(float), nullptr);
     // 2. enable
     vao.enableVertexAttribute(0);
-    vao.enableVertexAttribute(1);
+
+    GlSampler sampler;
+    sampler.setMagnifyingOperation(TexMagOp::NEAREST);
+    sampler.setMinifyingOperation(TexMinOp::NEAREST); //
 
     glDisable(GL_DEPTH_TEST);
 
+    sampler.bind(0);
 //    fbo.bind();
     glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     glViewport(0, 0, width, height);
     program.bind();
     vao.bind();
+    glActiveTexture(GL_TEXTURE0);
+    input_texture.bind();
 
     glDrawArrays(GL_POINTS, 0, pixel_buffer.size());
 
@@ -287,6 +293,11 @@ int main(int argc, char** argv) {
     program.release();
 //    fbo.release();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    sampler.release(0);
+
+    glActiveTexture(GL_TEXTURE0);
+    input_texture.release();
 
     glEnable(GL_DEPTH_TEST);
 
