@@ -243,18 +243,22 @@ int main(int argc, char** argv) {
 
 
     for (int i = 0; i < in_view_cloud.size(); i++) {
-            vec4 v;
-        v.x =  uv_with_depth.at(i)(0);
-        v.y =  uv_with_depth.at(i)(1);
-        v.z = 0;
+        vec4 v;
+        v.x =  in_view_cloud.at(i).x;
+        v.y =  in_view_cloud.at(i).y;
+        v.z =  in_view_cloud.at(i).z;
         v.w = 0;
         pixels.push_back(v);
 
-        v.x = 3000 + uv_with_depth.at(i)(0);
-        v.y =  uv_with_depth.at(i)(1);
-        v.z = 0;
+
+        v.x =  in_view_cloud.at(i).x;
+        v.y =  in_view_cloud.at(i).y;
+        v.z =  - in_view_cloud.at(i).z;
         v.w = 0;
-            pixels.push_back(v);
+        pixels.push_back(v);
+
+
+
     }
 
     point_buffer.assign(pixels);
