@@ -142,8 +142,8 @@ int main() {
 
 
     glow::GlProgram extractProgram;
-    extractProgram.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/detect_in_view_frame_buffer.vert"));
-    extractProgram.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/detect_in_view_frame_buffer.frag"));
+    extractProgram.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/detect_in_view_fbo_tf.vert"));
+    extractProgram.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/detect_in_view_fbo_tf.frag"));
     extractProgram.attach(extractFeedback);
     extractProgram.link();
 
