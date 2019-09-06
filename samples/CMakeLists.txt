@@ -42,3 +42,6 @@ add_executable(detect_points_in_view_frame_buffer detect_points_in_view_frame_bu
 target_link_libraries(detect_points_in_view_frame_buffer ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
 
 
+add_executable(egl_opengl_test egl_opengl_test.cpp)
+target_link_libraries(egl_opengl_test ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util  -lGLESv2 -lEGL)
+
