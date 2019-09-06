@@ -4,7 +4,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 
 
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 3.3.0 REQUIRED)
 message(STATUS "Found GLFW3 in ${GLFW3_INCLUDE_DIR}")
 include_directories(${OpenCV_INCLUDE_DIRS} )
 
@@ -38,8 +38,14 @@ target_link_libraries(particle_se2_translation ${OPENGL_LIBRARIES} ${GLEW_LIBRAR
 add_executable(detect_points_in_view detect_points_in_view.cpp)
 target_link_libraries(detect_points_in_view ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
 
-add_executable(detect_points_in_view_frame_buffer detect_points_in_view_frame_buffer.cpp)
-target_link_libraries(detect_points_in_view_frame_buffer ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
+
+
+add_executable(detect_points_in_view_fbo_tf detect_points_in_view_fbo_tf.cpp)
+target_link_libraries(detect_points_in_view_fbo_tf ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
+
+
+add_executable(detect_points_in_view_fbo detect_points_in_view_fbo.cpp)
+target_link_libraries(detect_points_in_view_fbo ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
 
 
 add_executable(egl_opengl_test egl_opengl_test.cpp)

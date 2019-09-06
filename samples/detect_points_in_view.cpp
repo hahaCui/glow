@@ -208,10 +208,7 @@ int main() {
     extractFeedback.begin(TransformFeedbackMode::POINTS);
     glDrawArrays(GL_POINTS, 0, input_vec.size());
     uint32_t extractedSize = extractFeedback.end();
-
     extractBuffer.resize(extractedSize);
-
-
 
     std::vector<PointInView> download_input_vec;
     download_input_vec.reserve(2 * input_vec.size());
