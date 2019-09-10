@@ -18,6 +18,11 @@ target_link_libraries(process_image ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${Open
 add_executable(vao_buffer vao_buffer.cpp)
 target_link_libraries(vao_buffer ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
 
+
+add_executable(vao_buffer_MRT vao_buffer_MRT.cpp)
+target_link_libraries(vao_buffer_MRT ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
+
+
 add_executable(sampler_sample sampler_sample.cpp)
 target_link_libraries(sampler_sample ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
 
@@ -50,4 +55,7 @@ target_link_libraries(detect_points_in_view_fbo ${OPENGL_LIBRARIES} ${GLEW_LIBRA
 
 add_executable(egl_opengl_test egl_opengl_test.cpp)
 target_link_libraries(egl_opengl_test ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util  -lGLESv2 -lEGL)
+
+add_executable(blend_sample blend_sample.cpp)
+target_link_libraries(blend_sample ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
 

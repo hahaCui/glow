@@ -117,10 +117,6 @@ int main() {
     uint32_t image_width = image.cols;
     uint32_t image_height = image.rows;
     std::cout << "lidar_points: " << lidar_points.size() << std::endl;
-//    for (auto i : lidar_points) {
-//        std::cout << i.x << " " << i.y << " " << i.z << std::endl;
-//    }
-
 
    Eigen::Matrix4f T_cam_lidar;
    T_cam_lidar <<4.276802385584e-04, -9.999672484946e-01, -8.084491683471e-03, -1.198459927713e-02,
