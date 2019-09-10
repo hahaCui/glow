@@ -269,6 +269,7 @@ int main(int argc, char** argv) {
 
     vec2 wh(width, height);
     program.setUniform(GlUniform<Eigen::Matrix4f>("T_C0_C1", T_C0C1));
+    program.setUniform(GlUniform<Eigen::Matrix4f>("T_Cam_Lidar", T_cam_lidar));
     program.setUniform(GlUniform<vec2>("wh", wh));
     program.setUniform(GlUniform<vec4>("intrinsic", intrinsic));
     program.setUniform(GlUniform<int32_t>("last_texture", 0));

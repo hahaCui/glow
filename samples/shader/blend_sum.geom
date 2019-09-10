@@ -3,13 +3,15 @@
 layout(points) in;
 layout(points, max_vertices = 1) out;
 
-in Element
+out CostInformation
 {
   bool valid;
-  vec4 position;
-  vec4 rgb;
-  vec3 xyz;
-  vec2 uv;
+  vec3 C1p;
+  vec3 C0p;
+  vec3 rgb1;
+  vec3 rgb0;
+  vec2 uv1;
+  vec2 uv0;
 } gs_in[];
 
 out vec4 tex_color;
@@ -23,14 +25,15 @@ void main()
 {
   if(gs_in[0].valid)
   {
-    gl_Position = gs_in[0].position;
-    tex_color = gs_in[0].rgb;
-
-    point_in_view_xyz = gs_in[0].xyz;
-    point_in_view_rgb = gs_in[0].rgb.xyz;
-    point_in_view_uv = gs_in[0].uv;
-
-    EmitVertex();
-    EndPrimitive();
+    // todo  if valid
+//    gl_Position = gs_in[0].position;
+//    tex_color = gs_in[0].rgb;
+//
+//    point_in_view_xyz = gs_in[0].xyz;
+//    point_in_view_rgb = gs_in[0].rgb.xyz;
+//    point_in_view_uv = gs_in[0].uv;
+//
+//    EmitVertex();
+//    EndPrimitive();
   }
 }
