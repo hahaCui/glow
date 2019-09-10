@@ -1,12 +1,12 @@
 #version 330 core
 
-layout (location = 0) in vec3 input_Cp;
-layout (location = 1) in vec3 input_rgb;
-layout (location = 2) in vec3 input_uv;
+layout (location = 0) in vec3 input_C1p;
+layout (location = 1) in vec3 input_rgb1;
+layout (location = 2) in vec3 input_uv1;
 
 uniform sampler2D last_texture;
 
-uniform mat4 T_cam_lidar;
+uniform mat4 T_C0_C1;
 uniform vec2 wh;
 uniform vec4 intrinsic;
 
@@ -20,19 +20,22 @@ out Element
 } vs_out;
 
 out vec4 color;
+
 void main()
 {
 
-  vec3 Cp = input_Cp.xyz;
+  vec4 C1p_homo = vec4(input_C1p, 1);
+  vec4 C0p_homo = T_C0_C1* C1p_homo;
+  vec3 C0p = C0p_homo.xyz;
 
   //    position_out = Cp;
 
-  float inv_z = 1.0/ Cp.z;
+  float inv_z = 1.0/ C0p.z;
 
-  float u = intrinsic.x * Cp.x * inv_z + intrinsic.z;
-  float v = intrinsic.y * Cp.y * inv_z + intrinsic.w;
+  float u = intrinsic.x * C0p.x * inv_z + intrinsic.z;
+  float v = intrinsic.y * C0p.y * inv_z + intrinsic.w;
 
-  if ( Cp.z < 0 || u < 0 || u > wh.x || v < 0 || v > wh.y) {
+  if ( C0p.z < 0 || u < 0 || u > wh.x || v < 0 || v > wh.y) {
     vs_out.valid = false;
 
 
@@ -47,7 +50,7 @@ void main()
     vec2 tex_coords = vec2(u/float(wh.x), (float(v) / float(wh.y)));
 //    vs_out.rgb = texture(input_texture, tex_coords);
 
-    vs_out.xyz = Cp;
+    vs_out.xyz = C0p;
     vs_out.uv = vec2(u,v);
 //    color = vec4(input_rgb,1.0);
 

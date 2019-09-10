@@ -173,6 +173,20 @@ int main(int argc, char** argv) {
             0.000000000000e+00, 7.188560000000e+02, 1.852157000000e+02, 0.000000000000e+00,
             0.000000000000e+00, 0.000000000000e+00, 1.000000000000e+00, 0.000000000000e+00;
 
+    Eigen::Matrix4f T_WC0;
+    T_WC0 << 1.000000e+00, 9.043680e-12, 2.326809e-11, 5.551115e-17,
+            9.043683e-12, 1.000000e+00, 2.392370e-10, 3.330669e-16,
+            2.326810e-11, 2.392370e-10, 9.999999e-01, -4.440892e-16,
+            0,0,0,1;
+    Eigen::Matrix4f T_WC1;
+    T_WC1 << 9.999978e-01, 5.272628e-04, -2.066935e-03, -4.690294e-02,
+            -5.296506e-04, 9.999992e-01, -1.154865e-03, -2.839928e-02,
+            2.066324e-03, 1.155958e-03, 9.999971e-01, 8.586941e-01,
+            0,0,0,1;
+
+    Eigen::Matrix4f T_C0C1 = T_WC0.inverse() * T_WC1;
+
+
     uint32_t width = image1.cols;
     uint32_t height = image1.rows;
     vec4 intrinsic(fx, fy, cx, cy);
@@ -254,7 +268,7 @@ int main(int argc, char** argv) {
     program.link();
 
     vec2 wh(width, height);
-    program.setUniform(GlUniform<Eigen::Matrix4f>("T_cam_lidar", T_cam_lidar));
+    program.setUniform(GlUniform<Eigen::Matrix4f>("T_C0_C1", T_C0C1));
     program.setUniform(GlUniform<vec2>("wh", wh));
     program.setUniform(GlUniform<vec4>("intrinsic", intrinsic));
     program.setUniform(GlUniform<int32_t>("last_texture", 0));
