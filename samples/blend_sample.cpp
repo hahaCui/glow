@@ -133,6 +133,7 @@ inline int getPointsInCameraView(const std::vector<vec4>& cloud,
             uv_with_depth.push_back(uv);
 
             in_view_cloud.push_back(pointXyzi);
+//            colors.push_back()
         }
     }
 
@@ -192,36 +193,50 @@ int main(int argc, char** argv) {
     std::cout << "lidar_points: " << lidar_points.size() << std::endl;
     std::cout << "in view points: " << in_view_cloud.size() << std::endl;
 
-    for () {
+    std::vector<PointInView> point_in_view_vec;
+    for (int i = 0; i < in_view_cloud.size(); i++) {
+        PointInView pointInView;
+        pointInView.x = in_view_cloud.at(i).x;
+        pointInView.y = in_view_cloud.at(i).y;
+        pointInView.z = in_view_cloud.at(i).z;
 
+        pointInView.r = in_view_cloud.at(i).w;
+        pointInView.g = in_view_cloud.at(i).w;
+        pointInView.b = in_view_cloud.at(i).w;
+
+        point_in_view_vec.push_back(pointInView);
     }
+
+    std::cout << "get in view: " << point_in_view_vec.size() << std::endl;
 
 
     // init window
     glow::X11OffscreenContext ctx(3,3);  // OpenGl context
     glow::inititializeGLEW();
 
-    cv::Mat float_image;
-    image1.convertTo(float_image, CV_32FC3);
 
-    GlTexture input_texture{width, height, TextureFormat::RGBA_FLOAT};
-    input_texture.assign(PixelFormat::RGB, PixelType::FLOAT, float_image.ptr());
+
+
+
+    cv::Mat float_image;
+    image0.convertTo(float_image, CV_32FC3);
+    GlTexture last_texture{width, height, TextureFormat::RGBA_FLOAT};
+    last_texture.assign(PixelFormat::RGB, PixelType::FLOAT, float_image.ptr());
 
     GlTexture output0{width, height, TextureFormat::RGBA_FLOAT};
     GlRenderbuffer rbo(width, height, RenderbufferFormat::DEPTH_STENCIL);
 
-    GlBuffer<vec4> point_buffer{BufferTarget::ARRAY_BUFFER, BufferUsage::STATIC_DRAW};
-    point_buffer.assign(lidar_points);
 
-    glow::GlBuffer<PointInView> extractBuffer{glow::BufferTarget::ARRAY_BUFFER, glow::BufferUsage::DYNAMIC_DRAW};
-    glow::GlTransformFeedback extractFeedback;
-    std::vector<std::string> varyings{
-            "point_in_view_xyz",
-            "point_in_view_rgb",
-            "point_in_view_uv",
-    };
-    extractBuffer.reserve(2 * lidar_points.size());
-    extractFeedback.attach(varyings, extractBuffer);
+
+//    glow::GlBuffer<PointInView> extractBuffer{glow::BufferTarget::ARRAY_BUFFER, glow::BufferUsage::DYNAMIC_DRAW};
+//    glow::GlTransformFeedback extractFeedback;
+//    std::vector<std::string> varyings{
+//            "point_in_view_xyz",
+//            "point_in_view_rgb",
+//            "point_in_view_uv",
+//    };
+//    extractBuffer.reserve(2 * lidar_points.size());
+//    extractFeedback.attach(varyings, extractBuffer);
 
     GlFramebuffer fbo(width, height);
     fbo.attach(FramebufferAttachment::COLOR0, output0);
@@ -232,9 +247,9 @@ int main(int argc, char** argv) {
 
     GlProgram program;
     program.attach(GlShader::fromFile(ShaderType::VERTEX_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/blend_sum.vert"));
-    program.attach(GlShader::fromFile(ShaderType::GEOMETRY_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/blend_sum.geom"));
+//    program.attach(GlShader::fromFile(ShaderType::GEOMETRY_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/blend_sum.geom"));
     program.attach(GlShader::fromFile(ShaderType::FRAGMENT_SHADER, "/home/pang/suma_ws/src/glow/samples/shader/blend_sum.frag"));
-    program.attach(extractFeedback);
+//    program.attach(extractFeedback);
 
     program.link();
 
@@ -242,14 +257,19 @@ int main(int argc, char** argv) {
     program.setUniform(GlUniform<Eigen::Matrix4f>("T_cam_lidar", T_cam_lidar));
     program.setUniform(GlUniform<vec2>("wh", wh));
     program.setUniform(GlUniform<vec4>("intrinsic", intrinsic));
+    program.setUniform(GlUniform<int32_t>("last_texture", 0));
 
-    program.setUniform(GlUniform<int32_t>("input_texture", 0));
-
+    glow::GlBuffer<PointInView> buffer{glow::BufferTarget::ARRAY_BUFFER,
+                                       glow::BufferUsage::DYNAMIC_DRAW};
+    buffer.assign(point_in_view_vec);
     GlVertexArray vao;
-    // 1. set
-    vao.setVertexAttribute(0, point_buffer, 4, AttributeType::FLOAT, false, 4 * sizeof(float), nullptr);
-    // 2. enable
-    vao.enableVertexAttribute(0);
+    vao.setVertexAttribute(0, buffer, 3, AttributeType::FLOAT, false, sizeof(PointInView),
+                                   reinterpret_cast<GLvoid*>(0));
+    vao.setVertexAttribute(1, buffer, 3, AttributeType::FLOAT, false, sizeof(PointInView),
+                                   reinterpret_cast<GLvoid*>(3 * sizeof(GLfloat)));
+    vao.setVertexAttribute(2, buffer, 2, AttributeType::INT, false, sizeof(PointInView),
+                                   reinterpret_cast<GLvoid*>(6 * sizeof(GLfloat)));
+
 
     GlSampler sampler;
     sampler.setMagnifyingOperation(TexMagOp::NEAREST);
@@ -257,7 +277,7 @@ int main(int argc, char** argv) {
 
     glDisable(GL_DEPTH_TEST);
 
-    extractFeedback.bind();
+//    extractFeedback.bind();
     sampler.bind(0);
     fbo.bind();
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -265,26 +285,26 @@ int main(int argc, char** argv) {
     program.bind();
     vao.bind();
     glActiveTexture(GL_TEXTURE0);
-    input_texture.bind();
+    last_texture.bind();
 
-    extractFeedback.begin(TransformFeedbackMode::POINTS);
+//    extractFeedback.begin(TransformFeedbackMode::POINTS);
     glDrawArrays(GL_POINTS, 0, lidar_points.size());
-    uint32_t extractedSize = extractFeedback.end();
-    extractBuffer.resize(extractedSize);
+//    uint32_t extractedSize = extractFeedback.end();
+//    extractBuffer.resize(extractedSize);
 
-    std::vector<PointInView> download_input_vec;
-    download_input_vec.reserve(2 * lidar_points.size());
-    extractBuffer.get(download_input_vec);
+//    std::vector<PointInView> download_input_vec;
+//    download_input_vec.reserve(2 * lidar_points.size());
+//    extractBuffer.get(download_input_vec);
 
     vao.release();
     program.release();
     fbo.release();
-    extractFeedback.release();
+//    extractFeedback.release();
 
     sampler.release(0);
 
     glActiveTexture(GL_TEXTURE0);
-    input_texture.release();
+    last_texture.release();
 
     glEnable(GL_DEPTH_TEST);
 
@@ -303,17 +323,17 @@ int main(int argc, char** argv) {
 
     }
 
-    int total_in_view_cnt = 0;
-    cv::Mat1b point_image(height, width, CV_8UC1);
-    point_image.setTo(0);
-    cv::Mat image_gray;
-    cv::cvtColor(image1, image_gray, CV_RGB2GRAY);
-    for (auto i : download_input_vec) {
-        point_image.at<uchar>(i.v, i.u)= i.r;
-    }
+//    int total_in_view_cnt = 0;
+//    cv::Mat1b point_image(height, width, CV_8UC1);
+//    point_image.setTo(0);
+//    cv::Mat image_gray;
+//    cv::cvtColor(image1, image_gray, CV_RGB2GRAY);
+//    for (auto i : download_input_vec) {
+//        point_image.at<uchar>(i.v, i.u)= i.r;
+//    }
 
-    std::cout << "total_in_view_cnt: " << total_in_view_cnt << std::endl;
-    cv::imshow("point_image", point_image);
+//    std::cout << "total_in_view_cnt: " << total_in_view_cnt << std::endl;
+//    cv::imshow("point_image", point_image);
     cv::imshow("image1", image1);
     cv::imshow("out_image0", out_image0);
     cv::waitKey(100000);
