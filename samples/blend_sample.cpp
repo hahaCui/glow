@@ -186,6 +186,8 @@ int main(int argc, char** argv) {
 
     Eigen::Matrix4f T_C0C1 = T_WC0.inverse() * T_WC1;
 
+    Eigen::Matrix4f T_L0L1 = T_cam_lidar.inverse() * T_C0C1 * T_cam_lidar;
+
 
     uint32_t width = image1.cols;
     uint32_t height = image1.rows;
@@ -232,10 +234,15 @@ int main(int argc, char** argv) {
 
 
 
-    cv::Mat float_image;
-    image0.convertTo(float_image, CV_32FC3);
+    cv::Mat float_image0, float_image1;
+    image0.convertTo(float_image0, CV_32FC3);
+    image1.convertTo(float_image1, CV_32FC3);
+
     GlTexture last_texture{width, height, TextureFormat::RGBA_FLOAT};
-    last_texture.assign(PixelFormat::RGB, PixelType::FLOAT, float_image.ptr());
+    last_texture.assign(PixelFormat::RGB, PixelType::FLOAT, float_image0.ptr());
+
+    GlTexture cur_texture{width, height, TextureFormat::RGBA_FLOAT};
+    cur_texture.assign(PixelFormat::RGB, PixelType::FLOAT, float_image1.ptr());
 
     GlTexture output0{width, height, TextureFormat::RGBA_FLOAT};
     GlRenderbuffer rbo(width, height, RenderbufferFormat::DEPTH_STENCIL);
@@ -268,11 +275,13 @@ int main(int argc, char** argv) {
     program.link();
 
     vec2 wh(width, height);
-    program.setUniform(GlUniform<Eigen::Matrix4f>("T_C0_C1", T_C0C1));
+    program.setUniform(GlUniform<Eigen::Matrix4f>("T_L0_L1", T_L0L1));
     program.setUniform(GlUniform<Eigen::Matrix4f>("T_Cam_Lidar", T_cam_lidar));
+    program.setUniform(GlUniform<Eigen::Matrix4f>("T_Lidar_Cam", T_cam_lidar.inverse()));
     program.setUniform(GlUniform<vec2>("wh", wh));
     program.setUniform(GlUniform<vec4>("intrinsic", intrinsic));
-    program.setUniform(GlUniform<int32_t>("last_texture", 0));
+    program.setUniform(GlUniform<int32_t>("cur_texture", 0));
+    program.setUniform(GlUniform<int32_t>("last_texture", 1));
 
     glow::GlBuffer<PointInView> buffer{glow::BufferTarget::ARRAY_BUFFER,
                                        glow::BufferUsage::DYNAMIC_DRAW};
@@ -300,6 +309,8 @@ int main(int argc, char** argv) {
     program.bind();
     vao.bind();
     glActiveTexture(GL_TEXTURE0);
+    cur_texture.bind();
+    glActiveTexture(GL_TEXTURE1);
     last_texture.bind();
 
 //    extractFeedback.begin(TransformFeedbackMode::POINTS);
@@ -319,6 +330,8 @@ int main(int argc, char** argv) {
     sampler.release(0);
 
     glActiveTexture(GL_TEXTURE0);
+    cur_texture.release();
+    glActiveTexture(GL_TEXTURE1);
     last_texture.release();
 
     glEnable(GL_DEPTH_TEST);

@@ -4,10 +4,14 @@ layout (location = 0) in vec3 input_C1p;
 layout (location = 1) in vec3 input_rgb1;
 layout (location = 2) in vec2 input_uv1;
 
+uniform sampler2D cur_texture;
 uniform sampler2D last_texture;
 
-uniform mat4 T_C0_C1;
+
+uniform mat4 T_L0_L1;
 uniform mat4 T_Cam_Lidar;
+uniform mat4 T_Lidar_Cam;
+
 uniform vec2 wh;
 uniform vec4 intrinsic;
 
@@ -16,17 +20,23 @@ out CostInformation
   bool valid;
   vec3 C1p;
   vec3 C0p;
-  vec3 rgb1;
-  vec3 rgb0;
+
   vec2 uv1;
   vec2 uv0;
 } vs_out;
+
+
+const int half_patch_size = 1;
+//const float inv_pi = 0.31830988618379067154f;
+//const float pi_2 = 1.57079632679;
+
 
 out vec4 color;
 
 void main()
 {
 
+  mat4 T_C0_C1 = T_Cam_Lidar * T_L0_L1 * T_Lidar_Cam;
   vec4 C1p_homo = vec4(input_C1p, 1);
   vec4 C0p_homo = T_C0_C1* C1p_homo;
   vec3 C0p = C0p_homo.xyz;
@@ -38,9 +48,10 @@ void main()
   float u = intrinsic.x * C0p.x * inv_z + intrinsic.z;
   float v = intrinsic.y * C0p.y * inv_z + intrinsic.w;
 
-  if ( C0p.z < 0 || u < 0 || u > wh.x || v < 0 || v > wh.y) {
+  if ( C0p.z < 0 ||
+        u < half_patch_size || u > wh.x - half_patch_size
+        || v < half_patch_size || v > wh.y - half_patch_size) {
     vs_out.valid = false;
-
 
   } else {
     vs_out.valid = true;
@@ -61,8 +72,8 @@ void main()
 
     vs_out.C1p = C1p_homo.xyz;
     vs_out.C0p = C0p.xyz;
-    vs_out.rgb1 = input_rgb1;
-    vs_out.rgb0 = texture(last_texture, tex_coords).xyz;
+//    vs_out.rgb1 = input_rgb1;
+//    vs_out.rgb0 = texture(last_texture, tex_coords).xyz;
     vs_out.uv1 = input_uv1;
     vs_out.uv0 = vec2(u,v);
 
