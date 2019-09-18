@@ -68,7 +68,6 @@ int main() {
     // must constaint this line, otherwise, there will be a linking error
     GlFramebuffer fbo1(width, height);
 
-
     // shader source code
     std::string vertex_source =
             "#version 330\n"
