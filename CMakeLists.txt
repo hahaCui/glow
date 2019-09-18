@@ -26,6 +26,14 @@ else()
   set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -O3 -DNDEBUG ${CMAKE_CXX_FLAGS}")
 endif()
 
+
+# Set some compiler flags.
+add_definitions("-DENABLE_SSE")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${SSE_FLAGS} -march=native")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${SSE_FLAGS} -march=native")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${SSE_FLAGS} -march=native")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${SSE_FLAGS} -march=native")
+
 message(STATUS "Using CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 
 option(ENABLE_NVIDIA_EXT "Enable Nvidia GL capabilites." OFF)

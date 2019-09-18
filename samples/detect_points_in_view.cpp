@@ -23,10 +23,10 @@
 #include <glow/GlUniform.h>
 #include <glow/util/X11OffscreenContext.h>
 
+
 #include "timer.h"
 
 using namespace glow;
-
 
 std::vector<vec3> loadLidarPoints(const std::string& bin_file ) {
     // load point cloud
@@ -105,8 +105,8 @@ inline RetType bilinearInterp(const cv::Mat& img, float x, float y) {
 }
 
 int main() {
-    std::string image_file = "/home/pang/disk/dataset/kitti/00/image_0/000000.png";
-    std::string lidarscan_file = "/home/pang/disk/dataset/kitti/00/velodyne/000000.bin";
+    std::string image_file = "/home/pang/data/dataset/kitti/00/image_0/000000.png";
+    std::string lidarscan_file = "/home/pang/data/dataset/kitti/00/velodyne/000000.bin";
 
     cv::Mat image = cv::imread(image_file, CV_LOAD_IMAGE_COLOR);
 //    cv::imshow("image", image);

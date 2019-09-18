@@ -59,3 +59,7 @@ target_link_libraries(egl_opengl_test ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${Op
 add_executable(blend_sample blend_sample.cpp)
 target_link_libraries(blend_sample ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
 
+include_directories(external)
+add_executable(interpolate_mesh interpolate_mesh.cpp external/triangle/triangle.cpp)
+target_link_libraries(interpolate_mesh ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${OpenCV_LIBS} glow glow_util )
+
