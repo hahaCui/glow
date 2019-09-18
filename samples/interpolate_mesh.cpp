@@ -645,16 +645,31 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
     // data for a fullscreen quad
-    GLfloat vertexData[] = {
-            //  X     Y     Z           R     G     B
-            0.5f, 0.5f, 0.0f,       1.0f, 0.0f, 0.0f, // vertex 0
-            -0.5f, 0.5f, 0.0f,       0.0f, 1.0f, 0.0f, // vertex 1
-            0.5f,-0.5f, 0.0f,       0.0f, 0.0f, 1.0f, // vertex 2
-            -0.5f,-0.5f, 0.0f,       1.0f, 0.0f, 0.0f, // vertex 3
-    }; // 4 vertices with 6 components (floats) each
+//    GLfloat vertexData[] = {
+//            //  X     Y     Z           R     G     B
+//            0.5f, 0.5f, 0.0f,       1.0f, 0.0f, 0.0f, // vertex 0
+//            -0.5f, 0.5f, 0.0f,       0.0f, 1.0f, 0.0f, // vertex 1
+//            0.5f,-0.5f, 0.0f,       0.0f, 0.0f, 1.0f, // vertex 2
+//            -0.5f,-0.5f, 0.0f,       1.0f, 0.0f, 0.0f, // vertex 3
+//    }; // 4 vertices with 6 components (floats) each
+
+    std::vector<GLfloat> vertexData_vec;
+    for (int i = 0; i < support.size(); i++) {
+        auto uv = support.at(i);
+        float I = values.at(i);
+        auto nu = 2.0f * (float(uv.x + 0.5f) / float(width)) - 1.0f;
+        auto nv = 2.0f * (float(uv.y + 0.5f) / float(height)) - 1.0f;
+        auto n_color = I/ 255.0;
+        vertexData_vec.push_back(nu);
+        vertexData_vec.push_back(nv);
+        vertexData_vec.push_back(0.0);
+        vertexData_vec.push_back(n_color);
+        vertexData_vec.push_back(n_color);
+        vertexData_vec.push_back(n_color);
+    }
 
     // fill with data
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*4*6, vertexData, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*support.size()*6, vertexData_vec.data(), GL_STATIC_DRAW);
 
 
     // set up generic attrib pointers
@@ -669,13 +684,20 @@ int main() {
     glGenBuffers(1, &ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 
-    GLuint indexData[] = {
-            0,1,2, // first triangle
-            2,1,3, // second triangle
-    };
+//    GLuint indexData[] = {
+//            0,1,2, // first triangle
+//            2,1,3, // second triangle
+//    };
+//
+    std::vector<GLint> indexData_vec;
+    for (auto i : triangles) {
+        indexData_vec.push_back(i[0]);
+        indexData_vec.push_back(i[1]);
+        indexData_vec.push_back(i[2]);
+    }
 
     // fill with data
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*2*3, indexData, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*triangles.size()*3, indexData_vec.data(), GL_STATIC_DRAW);
 
 
     // texture handle
@@ -721,7 +743,7 @@ int main() {
     glBindVertexArray(vao);
 
     // draw
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, triangles.size() * 3, GL_UNSIGNED_INT, 0);
 
 
     std::vector<unsigned char> data;
